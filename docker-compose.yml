@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: fashion-ecommerce-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fashion_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
