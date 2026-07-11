@@ -344,7 +344,7 @@ export default function VirtualTryOnPage() {
             ref={studioRef}
             onMouseMove={handleCanvasPointerMove}
             onMouseUp={handleCanvasPointerUp}
-            className="relative w-full max-w-[340px] aspect-[3/4] rounded-3xl overflow-hidden bg-zinc-950 border border-zinc-900 select-none cursor-crosshair"
+            className="relative w-[340px] h-[453px] rounded-3xl overflow-hidden bg-zinc-950 border border-zinc-900 select-none cursor-crosshair"
           >
             
             {/* Before-and-After slider split rendering */}
