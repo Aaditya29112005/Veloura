@@ -38,7 +38,7 @@ export default function HomePage() {
         <div className="relative max-w-5xl mx-auto px-4 text-center z-10 space-y-6">
           <div className="inline-flex items-center space-x-1.5 bg-white/5 border border-white/10 rounded-full px-4.5 py-1.5 text-[10px] uppercase tracking-widest text-amber-400 font-semibold mb-2">
             <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>Autumn/Winter Collection 2026</span>
+            <span>Luxury Fashion. Effortlessly Delivered.</span>
           </div>
           
           <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-white leading-tight uppercase">
@@ -226,7 +226,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. Atelier Values / Trust Badges */}
+      {/* 4. Veloura Values / Trust Badges */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           

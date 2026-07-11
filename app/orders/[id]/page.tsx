@@ -228,7 +228,7 @@ export default function OrderDetailsPage() {
               <span>Fulfilment Standard</span>
             </div>
             <p className="text-xs text-zinc-350 leading-relaxed font-light print:text-black">
-              Complimentary Atelier Courier delivery (fully insured). Shipped within 24-48 business hours. Tracking notification is sent via email once processed.
+              Complimentary Veloura Courier delivery (fully insured). Shipped within 24-48 business hours. Tracking notification is sent via email once processed.
             </p>
           </div>
         </div>

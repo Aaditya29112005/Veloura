@@ -46,7 +46,7 @@ function SignupForm() {
     <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 p-8 rounded-2xl shadow-xl shadow-black/30">
       <h2 className="font-serif text-3xl font-semibold tracking-wide mb-2 text-center">Create Account</h2>
       <p className="text-zinc-500 text-xs text-center mb-8">
-        Join Atelier to save items, track shipments, and check out securely.
+        Join Veloura to save items, track shipments, and check out securely.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-5">

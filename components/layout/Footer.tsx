@@ -8,8 +8,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
           <div className="space-y-4">
-            <span className="font-serif tracking-widest text-xl font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-              ATELIER
+            <span className="font-serif tracking-widest text-xl font-bold bg-gradient-to-r from-amber-250 via-yellow-450 to-amber-500 bg-clip-text text-transparent">
+              VELOURA
             </span>
             <p className="text-zinc-500 text-xs leading-relaxed max-w-xs">
               A curated catalog of premium materials, timeless designs, and tailored aesthetics. Designed for the modern dresser.
@@ -52,7 +52,7 @@ export default function Footer() {
                 <span className="text-zinc-500 text-xs">Size Guide</span>
               </li>
               <li>
-                <span className="text-zinc-500 text-xs">Contact Atelier</span>
+                <span className="text-zinc-500 text-xs">Contact Veloura</span>
               </li>
               <li>
                 <span className="text-zinc-500 text-xs">Sustainability Commitments</span>
@@ -81,7 +81,7 @@ export default function Footer() {
 
         <div className="border-t border-zinc-900 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-zinc-600 text-[10px]">
-            &copy; {new Date().getFullYear()} ATELIER. All rights reserved. Built for Technical Assessment.
+            &copy; {new Date().getFullYear()} VELOURA. All rights reserved. Built for Technical Assessment.
           </p>
           <div className="flex space-x-4">
             <span className="text-zinc-600 text-[10px] hover:text-zinc-400 cursor-pointer">Privacy Policy</span>

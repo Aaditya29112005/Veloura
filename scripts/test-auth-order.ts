@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function runTests() {
   console.log("=========================================");
-  console.log("        ATELIER AUTOMATED TEST SUITE     ");
+  console.log("        VELOURA AUTOMATED TEST SUITE     ");
   console.log("=========================================");
 
   let testUser: any = null;

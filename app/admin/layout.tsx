@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
           <div>
             <span className="font-serif font-bold text-lg tracking-widest bg-gradient-to-r from-amber-250 to-amber-500 bg-clip-text text-transparent">
-              ATELIER
+              VELOURA
             </span>
             <span className="text-[9px] block text-zinc-550 uppercase tracking-widest font-semibold mt-0.5">Control Panel</span>
           </div>

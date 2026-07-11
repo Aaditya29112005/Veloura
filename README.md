@@ -1,6 +1,6 @@
-# ATELIER — Full-Stack Luxury Fashion E-Commerce Platform
+# Veloura — Full-Stack Luxury Fashion E-Commerce Platform
 
-ATELIER is a premium, full-stack online fashion marketplace. Shoppers can browse categories, filter/search garments, save items to a wishlist, manage a persistent server-side cart, check out via a simulated transactional flow, rate products, and review order histories. A dedicated administration console provides catalog management, image uploads (saved locally), coupon definition, and real-time sales performance metrics.
+Veloura is a premium, full-stack online fashion marketplace. Shoppers can browse categories, filter/search garments, save items to a wishlist, manage a persistent server-side cart, check out via a simulated transactional flow, rate products, and review order histories. A dedicated administration console provides catalog management, image uploads (saved locally), coupon definition, and real-time sales performance metrics.
 
 ---
 

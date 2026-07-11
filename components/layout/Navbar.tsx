@@ -57,9 +57,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between gap-4">
           
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <span className="font-serif tracking-widest text-2xl font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-              ATELIER
+          <Link href="/" className="flex-shrink-0 flex items-center space-x-2.5">
+            <span className="font-serif text-3xl font-extrabold text-white border-r border-zinc-800 pr-2.5 leading-none">
+              V
+            </span>
+            <span className="font-serif tracking-[0.25em] text-xs font-bold text-zinc-200 leading-none">
+              VELOURA
             </span>
           </Link>
 

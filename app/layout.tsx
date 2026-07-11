@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Playfair_Display, Geist } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
@@ -7,14 +7,19 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "react-hot-toast";
 
-const inter = Inter({
+const playfair = Playfair_Display({
+  variable: "--font-serif",
+  subsets: ["latin"],
+});
+
+const geist = Geist({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "ATELIER | Luxury Apparel & Fashion Marketplace",
-  description: "Curated collection of high-end tailoring, seasonal knitwear, fine linen shirts, and premium bottoms.",
+  title: "Veloura | Luxury Fashion. Effortlessly Delivered.",
+  description: "Curated collection of high-end tailoring, seasonal knitwear, fine linen shirts, and premium bottoms from Veloura.",
 };
 
 export default function RootLayout({
@@ -23,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${geist.variable} ${playfair.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 font-sans">
         <AuthProvider>
           <CartProvider>
