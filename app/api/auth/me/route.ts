@@ -25,6 +25,9 @@ export async function GET() {
         email: true,
         name: true,
         role: true,
+        loyaltyCoins: true,
+        badges: true,
+        lastDailyRewardClaimed: true,
         createdAt: true,
       },
     });
