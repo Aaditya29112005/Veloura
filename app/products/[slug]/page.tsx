@@ -742,7 +742,7 @@ export default function ProductDetailPage() {
                 </>
               ) : (
                 <div className="p-6 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-505 mx-auto">
+                  <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mx-auto">
                     📷
                   </div>
                   <p className="text-[10px] text-zinc-550 max-w-[150px] mx-auto font-light">No image uploaded. Use simulated portraits below.</p>

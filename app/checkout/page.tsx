@@ -275,7 +275,7 @@ export default function CheckoutPage() {
                   type="checkbox"
                   checked={isGift}
                   onChange={(e) => setIsGift(e.target.checked)}
-                  className="rounded bg-zinc-950 border-zinc-850 text-amber-405 focus:ring-0 w-4 h-4 cursor-pointer"
+                  className="rounded bg-zinc-950 border-zinc-850 text-amber-400 focus:ring-0 w-4 h-4 cursor-pointer"
                 />
                 <span>Send this order as a gift (hide prices on invoice)</span>
               </label>
