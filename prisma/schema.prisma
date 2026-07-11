@@ -88,6 +88,9 @@ model Product {
   purchasedCount  Int            @default(0)
   wishlistedCount Int            @default(0)
   colorHarmonies  String[]       @default([])
+  sustainabilityScore Int        @default(85)
+  ecoBadges           String[]   @default([])
+  returnRisk          String     @default("Low")
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 }
@@ -137,6 +140,10 @@ model Order {
   couponId        String?
   coupon          Coupon?     @relation(fields: [couponId], references: [id])
   items           OrderItem[]
+  isGift               Boolean     @default(false)
+  giftRecipient        String?
+  giftMessage          String?
+  deliveryScheduledFor DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }

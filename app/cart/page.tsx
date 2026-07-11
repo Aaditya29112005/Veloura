@@ -72,7 +72,33 @@ export default function CartPage() {
     }
   };
 
-  const total = Math.max(0, cartSubtotal - discountAmount);
+  // Bundle Detection Logic
+  const hasTop = cartItems.some(item => {
+    const name = item.product.name.toLowerCase();
+    return name.includes("shirt") || name.includes("tee") || name.includes("jacket") || name.includes("blazer") || name.includes("sweater") || name.includes("hoodie");
+  });
+
+  const hasBottom = cartItems.some(item => {
+    const name = item.product.name.toLowerCase();
+    return name.includes("trousers") || name.includes("pants") || name.includes("jeans") || name.includes("shorts") || name.includes("skirt");
+  });
+
+  const isBundleEligible = hasTop && hasBottom;
+  
+  let bundleDiscount = 0;
+  if (isBundleEligible) {
+    const bundleTotal = cartItems
+      .filter(item => {
+        const name = item.product.name.toLowerCase();
+        const isTop = name.includes("shirt") || name.includes("tee") || name.includes("jacket") || name.includes("blazer") || name.includes("sweater") || name.includes("hoodie");
+        const isBottom = name.includes("trousers") || name.includes("pants") || name.includes("jeans") || name.includes("shorts") || name.includes("skirt");
+        return isTop || isBottom;
+      })
+      .reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    bundleDiscount = bundleTotal * 0.15;
+  }
+
+  const total = Math.max(0, cartSubtotal - discountAmount - bundleDiscount);
 
   if (cartItems.length === 0) {
     return (
@@ -192,6 +218,15 @@ export default function CartPage() {
                     <Tag className="w-3 h-3 mr-1" /> Discount ({appliedCoupon?.code})
                   </span>
                   <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+
+              {bundleDiscount > 0 && (
+                <div className="flex justify-between text-amber-450 border border-dashed border-amber-400/20 bg-amber-400/5 p-2 rounded-xl">
+                  <span className="flex items-center font-bold">
+                    ✨ Bundle Builder (15% Off)
+                  </span>
+                  <span className="font-bold">-${bundleDiscount.toFixed(2)}</span>
                 </div>
               )}
 

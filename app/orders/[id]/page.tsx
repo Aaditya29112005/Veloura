@@ -106,7 +106,9 @@ export default function OrderDetailsPage() {
           </div>
           <div className="text-left sm:text-right print:text-black">
             <span className="text-xs text-zinc-500 block uppercase tracking-widest font-bold mb-1">Total Bill</span>
-            <span className="text-2xl font-serif font-bold text-white print:text-black">${order.totalAmount.toFixed(2)}</span>
+            <span className="text-2xl font-serif font-bold text-white print:text-black">
+              {order.isGift ? "Gift Order (Paid)" : `$${order.totalAmount.toFixed(2)}`}
+            </span>
           </div>
         </div>
 
@@ -181,8 +183,14 @@ export default function OrderDetailsPage() {
 
                   {/* Qty & Price subtotal */}
                   <div className="text-right">
-                    <span className="text-xs text-zinc-450 block print:text-zinc-650">Qty {item.quantity} &bull; ${item.price.toFixed(2)}</span>
-                    <span className="text-sm font-semibold text-zinc-200 print:text-black block">${(item.price * item.quantity).toFixed(2)}</span>
+                    {order.isGift ? (
+                      <span className="text-xs text-zinc-450 block print:text-zinc-650">Qty {item.quantity} &bull; Price Covered</span>
+                    ) : (
+                      <>
+                        <span className="text-xs text-zinc-450 block print:text-zinc-650">Qty {item.quantity} &bull; ${item.price.toFixed(2)}</span>
+                        <span className="text-sm font-semibold text-zinc-200 print:text-black block">${(item.price * item.quantity).toFixed(2)}</span>
+                      </>
+                    )}
                   </div>
 
                 </div>
@@ -192,24 +200,33 @@ export default function OrderDetailsPage() {
 
           {/* Pricing breakdowns subtotal */}
           <div className="border-t border-zinc-900 pt-4 flex flex-col items-end gap-2 text-xs text-zinc-400 print:border-zinc-300 print:text-zinc-700">
-            {order.coupon && (
-              <div className="flex justify-between w-48 text-green-450">
-                <span>Coupon Applied ({order.coupon.code})</span>
-                <span>
-                  {order.coupon.discountType === "PERCENT"
-                    ? `-${order.coupon.discountValue}%`
-                    : `-$${order.coupon.discountValue.toFixed(2)}`}
-                </span>
+            {order.isGift ? (
+              <div className="flex justify-between w-48 font-serif text-sm font-bold text-white pt-2 print:text-black">
+                <span>Paid Total</span>
+                <span>Price Covered</span>
               </div>
+            ) : (
+              <>
+                {order.coupon && (
+                  <div className="flex justify-between w-48 text-green-450">
+                    <span>Coupon Applied ({order.coupon.code})</span>
+                    <span>
+                      {order.coupon.discountType === "PERCENT"
+                        ? `-${order.coupon.discountValue}%`
+                        : `-$${order.coupon.discountValue.toFixed(2)}`}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between w-48 text-zinc-500 print:text-zinc-650">
+                  <span>Shipping Fee</span>
+                  <span>FREE</span>
+                </div>
+                <div className="flex justify-between w-48 font-serif text-sm font-bold text-white pt-2 border-t border-zinc-900 print:text-black print:border-zinc-300">
+                  <span>Paid Total</span>
+                  <span>${order.totalAmount.toFixed(2)}</span>
+                </div>
+              </>
             )}
-            <div className="flex justify-between w-48 text-zinc-500 print:text-zinc-650">
-              <span>Shipping Fee</span>
-              <span>FREE</span>
-            </div>
-            <div className="flex justify-between w-48 font-serif text-sm font-bold text-white pt-2 border-t border-zinc-900 print:text-black print:border-zinc-300">
-              <span>Paid Total</span>
-              <span>${order.totalAmount.toFixed(2)}</span>
-            </div>
           </div>
         </div>
 
@@ -218,8 +235,19 @@ export default function OrderDetailsPage() {
           <div className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6 space-y-3 print:border-zinc-300">
             <div className="flex items-center text-[10px] text-zinc-500 font-bold uppercase tracking-wider gap-1.5 print:text-zinc-750">
               <MapPin className="w-3.5 h-3.5" />
-              <span>Shipping Destination</span>
+              <span>{order.isGift ? "Gift Recipient & Destination" : "Shipping Destination"}</span>
             </div>
+            {order.isGift && (
+              <div className="text-xs space-y-1 mb-2">
+                <p className="text-zinc-200 font-semibold print:text-black">For: {order.giftRecipient}</p>
+                {order.giftMessage && <p className="text-amber-400 italic font-light print:text-zinc-800">&quot;{order.giftMessage}&quot;</p>}
+                {order.deliveryScheduledFor && (
+                  <p className="text-zinc-400 text-[10px] print:text-zinc-650">
+                    Scheduled delivery: {new Date(order.deliveryScheduledFor).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            )}
             <p className="text-xs text-zinc-300 leading-relaxed font-light print:text-black">{order.shippingAddress}</p>
           </div>
           <div className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6 space-y-3 print:border-zinc-300">

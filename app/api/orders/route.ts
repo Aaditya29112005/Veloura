@@ -72,7 +72,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { shippingAddress, billingAddress, couponCode, redeemCoins } = await request.json();
+    const { 
+      shippingAddress, 
+      billingAddress, 
+      couponCode, 
+      redeemCoins, 
+      isGift, 
+      giftRecipient, 
+      giftMessage, 
+      deliveryScheduledFor 
+    } = await request.json();
 
     if (!shippingAddress) {
       return NextResponse.json(
@@ -169,8 +178,32 @@ export async function POST(request: Request) {
       const requestedCoins = typeof redeemCoins === "number" ? redeemCoins : userCoins;
       coinsToRedeem = Math.min(userCoins, requestedCoins, maxCoinsRequired);
     }
+    // Bundle Builder Discount (Backend)
+    const hasTop = cart.items.some(item => {
+      const name = item.product.name.toLowerCase();
+      return name.includes("shirt") || name.includes("tee") || name.includes("jacket") || name.includes("blazer") || name.includes("sweater") || name.includes("hoodie");
+    });
+
+    const hasBottom = cart.items.some(item => {
+      const name = item.product.name.toLowerCase();
+      return name.includes("trousers") || name.includes("pants") || name.includes("jeans") || name.includes("shorts") || name.includes("skirt");
+    });
+
+    let bundleDiscount = 0;
+    if (hasTop && hasBottom) {
+      const bundleTotal = cart.items
+        .filter(item => {
+          const name = item.product.name.toLowerCase();
+          const isTop = name.includes("shirt") || name.includes("tee") || name.includes("jacket") || name.includes("blazer") || name.includes("sweater") || name.includes("hoodie");
+          const isBottom = name.includes("trousers") || name.includes("pants") || name.includes("jeans") || name.includes("shorts") || name.includes("skirt");
+          return isTop || isBottom;
+        })
+        .reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+      bundleDiscount = bundleTotal * 0.15;
+    }
+
     const coinsDiscount = coinsToRedeem / 100;
-    const finalAmount = Math.max(0, subtotal - discount - coinsDiscount);
+    const finalAmount = Math.max(0, subtotal - discount - coinsDiscount - bundleDiscount);
 
     // 3. Database transaction: Create order, decrement stock, update coins & badges, clear cart
     const order = await db.$transaction(async (tx) => {
@@ -183,6 +216,10 @@ export async function POST(request: Request) {
           shippingAddress,
           billingAddress: billingAddress || null,
           couponId: coupon ? coupon.id : null,
+          isGift: !!isGift,
+          giftRecipient: giftRecipient || null,
+          giftMessage: giftMessage || null,
+          deliveryScheduledFor: deliveryScheduledFor ? new Date(deliveryScheduledFor) : null,
           items: {
             create: cart.items.map((item) => ({
               productId: item.productId,

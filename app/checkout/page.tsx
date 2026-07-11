@@ -26,6 +26,12 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
 
+  // Gift Mode states
+  const [isGift, setIsGift] = useState(false);
+  const [giftRecipient, setGiftRecipient] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
+  const [deliveryScheduledFor, setDeliveryScheduledFor] = useState("");
+
   // Auto-fetch saved address if available
   useEffect(() => {
     if (user) {
@@ -96,6 +102,10 @@ export default function CheckoutPage() {
           shippingAddress: fullAddress,
           billingAddress: fullAddress,
           couponCode: appliedCoupon?.code || null,
+          isGift,
+          giftRecipient: isGift ? giftRecipient : null,
+          giftMessage: isGift ? giftMessage : null,
+          deliveryScheduledFor: isGift && deliveryScheduledFor ? deliveryScheduledFor : null,
         }),
       });
 
@@ -114,7 +124,33 @@ export default function CheckoutPage() {
     }
   };
 
-  const total = Math.max(0, cartSubtotal - discountAmount);
+  // Bundle Detection Logic
+  const hasTop = cartItems.some(item => {
+    const name = item.product.name.toLowerCase();
+    return name.includes("shirt") || name.includes("tee") || name.includes("jacket") || name.includes("blazer") || name.includes("sweater") || name.includes("hoodie");
+  });
+
+  const hasBottom = cartItems.some(item => {
+    const name = item.product.name.toLowerCase();
+    return name.includes("trousers") || name.includes("pants") || name.includes("jeans") || name.includes("shorts") || name.includes("skirt");
+  });
+
+  const isBundleEligible = hasTop && hasBottom;
+  
+  let bundleDiscount = 0;
+  if (isBundleEligible) {
+    const bundleTotal = cartItems
+      .filter(item => {
+        const name = item.product.name.toLowerCase();
+        const isTop = name.includes("shirt") || name.includes("tee") || name.includes("jacket") || name.includes("blazer") || name.includes("sweater") || name.includes("hoodie");
+        const isBottom = name.includes("trousers") || name.includes("pants") || name.includes("jeans") || name.includes("shorts") || name.includes("skirt");
+        return isTop || isBottom;
+      })
+      .reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    bundleDiscount = bundleTotal * 0.15;
+  }
+
+  const total = Math.max(0, cartSubtotal - discountAmount - bundleDiscount);
 
   if (cartItems.length === 0) {
     return (
@@ -228,6 +264,64 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* 1.5 Gift Option checklist */}
+            <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-6 space-y-4">
+              <h2 className="font-serif text-lg font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                <span>🎁</span>
+                <span>Gift Options</span>
+              </h2>
+              <label className="flex items-center space-x-2.5 text-xs text-zinc-300 font-semibold cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isGift}
+                  onChange={(e) => setIsGift(e.target.checked)}
+                  className="rounded bg-zinc-950 border-zinc-850 text-amber-405 focus:ring-0 w-4 h-4 cursor-pointer"
+                />
+                <span>Send this order as a gift (hide prices on invoice)</span>
+              </label>
+
+              {isGift && (
+                <div className="space-y-3.5 pt-2 animate-fadeIn text-left">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-1.5">
+                      Recipient Name
+                    </label>
+                    <input
+                      type="text"
+                      value={giftRecipient}
+                      onChange={(e) => setGiftRecipient(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-850 rounded-lg py-2.5 px-3.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                      placeholder="e.g. Aaditya mohan samadhiya"
+                      required={isGift}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-1.5">
+                      Gift Message
+                    </label>
+                    <textarea
+                      value={giftMessage}
+                      onChange={(e) => setGiftMessage(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-850 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-amber-400"
+                      placeholder="e.g. Hope you love this premium curation!"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-1.5">
+                      Schedule Delivery Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={deliveryScheduledFor}
+                      onChange={(e) => setDeliveryScheduledFor(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-850 rounded-lg py-2.5 px-3.5 text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* 2. Payment simulation section */}
             <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-6 space-y-4">
               <h2 className="font-serif text-lg font-bold text-white uppercase tracking-wider flex items-center space-x-2">
@@ -290,6 +384,12 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-green-400">
                   <span>Discount</span>
                   <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {bundleDiscount > 0 && (
+                <div className="flex justify-between text-amber-450 font-semibold">
+                  <span>Bundle Discount (15%)</span>
+                  <span>-${bundleDiscount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-zinc-400">

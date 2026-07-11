@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-hot-toast";
-import { Heart, Star, ShoppingBag, ArrowLeft, RotateCcw, Truck } from "lucide-react";
+import { Heart, Star, ShoppingBag, ArrowLeft, RotateCcw, Truck, X } from "lucide-react";
 
 export default function ProductDetailPage() {
   const { slug } = useParams() as { slug: string };
@@ -36,6 +36,9 @@ export default function ProductDetailPage() {
   const [aiSummary, setAiSummary] = useState<any>(null);
   const [loadingAiSummary, setLoadingAiSummary] = useState(false);
   const [showAiSummary, setShowAiSummary] = useState(false);
+  const [isTryOnOpen, setIsTryOnOpen] = useState(false);
+  const [selfieImage, setSelfieImage] = useState<string | null>(null);
+  const [loadingTryOn, setLoadingTryOn] = useState(false);
 
   const fetchReviewsSummary = async (prodId: string) => {
     setLoadingAiSummary(true);
@@ -280,6 +283,14 @@ export default function ProductDetailPage() {
               ))}
             </div>
           )}
+          {/* Virtual Try-On Trigger */}
+          <button
+            onClick={() => setIsTryOnOpen(true)}
+            className="w-full bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2.5 print:hidden cursor-pointer"
+          >
+            <span>📷</span>
+            <span>Virtual Try-On (AR Mockup)</span>
+          </button>
         </div>
 
         {/* Right Column: Garment Information details */}
@@ -328,6 +339,27 @@ export default function ProductDetailPage() {
           <div className="border-t border-b border-zinc-900 py-4 text-xs font-light text-zinc-400 leading-relaxed">
             {product.description}
           </div>
+
+          {/* Sustainability Score Gauge */}
+          {product.sustainabilityScore && (
+            <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-4.5 flex items-center justify-between gap-4 print:hidden">
+              <div className="space-y-1 max-w-xs">
+                <span className="text-[9px] uppercase tracking-widest text-emerald-400 font-bold block">Sustainability Index</span>
+                <h4 className="text-xs font-semibold text-zinc-300">Eco-Score: A ({product.sustainabilityScore}/100)</h4>
+                <div className="flex flex-wrap gap-1.5 pt-1.5">
+                  {product.ecoBadges?.map((badge: string, idx: number) => (
+                    <span key={idx} className="bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full font-medium">
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="relative flex items-center justify-center w-14 h-14 rounded-full border-4 border-zinc-800 bg-zinc-950 flex-shrink-0">
+                <div className="absolute inset-0.5 rounded-full border border-emerald-400/20" />
+                <span className="text-xs font-serif font-bold text-emerald-400">{product.sustainabilityScore}%</span>
+              </div>
+            </div>
+          )}
 
           {/* Sizing selection */}
           {product.sizes?.length > 0 && (
@@ -439,6 +471,37 @@ export default function ProductDetailPage() {
                 <p className="font-semibold text-zinc-450">Exquisite Packaging</p>
                 <p className="font-light">Arrives in recycled dust bags and gift box.</p>
               </div>
+            </div>
+          </div>
+
+          {/* Product DNA Panel */}
+          <div className="bg-zinc-900/30 border border-zinc-900 rounded-3xl p-5 space-y-4 print:hidden">
+            <div className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+              <span>💡</span>
+              <span>Product DNA Profile</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-900">
+                <span className="text-[8px] uppercase tracking-wider text-zinc-550 block font-bold">Trending Score</span>
+                <span className="text-xs font-semibold text-zinc-350 block mt-0.5">High ({product.viewsCount || 42}/100)</span>
+              </div>
+              <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-900">
+                <span className="text-[8px] uppercase tracking-wider text-zinc-550 block font-bold">Popularity Index</span>
+                <span className="text-xs font-semibold text-zinc-350 block mt-0.5">Top 15% ({product.purchasedCount || 10} sales)</span>
+              </div>
+              <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-900">
+                <span className="text-[8px] uppercase tracking-wider text-zinc-550 block font-bold">Return Risk</span>
+                <span className="text-xs font-semibold text-zinc-350 block mt-0.5">{product.returnRisk || "Low"} (Fitted drape)</span>
+              </div>
+              <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-900">
+                <span className="text-[8px] uppercase tracking-wider text-zinc-550 block font-bold">Stock Health</span>
+                <span className="text-xs font-semibold text-green-400 block mt-0.5">Stable ({product.stock} units)</span>
+              </div>
+            </div>
+            
+            <div className="border-t border-zinc-850 pt-3 text-[11px] text-zinc-500 leading-relaxed font-light">
+              <span className="font-semibold text-zinc-400">AI Recommendation:</span> Perfect for capsule minimalist setups. Tonal coordination suggests pairing with neutral linen coordinates.
             </div>
           </div>
 
@@ -639,6 +702,115 @@ export default function ProductDetailPage() {
             })}
           </div>
         </section>
+      )}
+
+      {/* 5. Virtual Try-On Modal */}
+      {isTryOnOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-lg w-full p-6 space-y-6 relative text-center">
+            <button
+              onClick={() => {
+                setIsTryOnOpen(false);
+                setSelfieImage(null);
+              }}
+              className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h3 className="font-serif text-lg font-bold text-white uppercase tracking-wider">Virtual Try-On AR</h3>
+              <p className="text-zinc-500 text-xs font-light max-w-xs mx-auto leading-relaxed mt-1">
+                Upload your portrait photo to overlay the selected garment outline.
+              </p>
+            </div>
+
+            {/* Try-On Display Area */}
+            <div className="relative rounded-2xl overflow-hidden aspect-[3/4] max-w-[240px] mx-auto bg-zinc-950 border border-zinc-800 flex items-center justify-center">
+              {selfieImage ? (
+                <>
+                  <img src={selfieImage} alt="User selfie" className="object-cover w-full h-full" />
+                  {/* Garment outline overlay */}
+                  <img 
+                    src={activeImage} 
+                    alt="Garment overlay" 
+                    className="absolute inset-0 w-full h-full object-contain mix-blend-multiply opacity-80 scale-90 translate-y-6 pointer-events-none" 
+                  />
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-black/75 text-[8px] uppercase tracking-widest text-amber-400 font-bold py-1 px-2.5 rounded-full">
+                    AR Try-On Prototype v1.0
+                  </div>
+                </>
+              ) : (
+                <div className="p-6 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-505 mx-auto">
+                    📷
+                  </div>
+                  <p className="text-[10px] text-zinc-550 max-w-[150px] mx-auto font-light">No image uploaded. Use simulated portraits below.</p>
+                </div>
+              )}
+              {loadingTryOn && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xs text-zinc-400 animate-pulse font-medium uppercase tracking-wider">
+                  Analyzing body mesh lines...
+                </div>
+              )}
+            </div>
+
+            {/* Simulated portraits / Custom Upload */}
+            <div className="space-y-4">
+              <span className="text-[9px] uppercase tracking-wider text-zinc-550 font-bold block">Simulated Models</span>
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => {
+                    setLoadingTryOn(true);
+                    setTimeout(() => {
+                      setSelfieImage("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80");
+                      setLoadingTryOn(false);
+                    }, 1200);
+                  }}
+                  className="bg-zinc-950 border border-zinc-800 hover:border-amber-400 text-[10px] px-3.5 py-2 rounded-xl text-zinc-350 cursor-pointer"
+                >
+                  Model A (Feminine)
+                </button>
+                <button
+                  onClick={() => {
+                    setLoadingTryOn(true);
+                    setTimeout(() => {
+                      setSelfieImage("https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&auto=format&fit=crop&q=80");
+                      setLoadingTryOn(false);
+                    }, 1200);
+                  }}
+                  className="bg-zinc-950 border border-zinc-800 hover:border-amber-400 text-[10px] px-3.5 py-2 rounded-xl text-zinc-350 cursor-pointer"
+                >
+                  Model B (Masculine)
+                </button>
+              </div>
+
+              <div className="border-t border-zinc-850 pt-4 flex flex-col items-center">
+                <label className="bg-white hover:bg-zinc-200 text-black text-[10px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer">
+                  Upload Custom Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setLoadingTryOn(true);
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setSelfieImage(reader.result as string);
+                          setLoadingTryOn(false);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </div>

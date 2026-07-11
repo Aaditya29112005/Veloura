@@ -387,6 +387,13 @@ async function main() {
         purchasedCount: Math.floor(Math.random() * 60) + 10,
         wishlistedCount: Math.floor(Math.random() * 40) + 5,
         colorHarmonies: item.colors.concat(["Off-White", "Cream", "Black", "Charcoal", "Grey", "White", "Navy"]).slice(0, 5),
+        sustainabilityScore: Math.floor(Math.random() * 18) + 80,
+        ecoBadges: [
+          item.name.toLowerCase().includes("linen") ? "100% Organic Linen" : item.name.toLowerCase().includes("cotton") ? "Supima Organic Cotton" : "Recycled Fine Wool",
+          "Low Water Footprint",
+          "Carbon-Neutral Logistics"
+        ],
+        returnRisk: Math.random() > 0.7 ? "Medium" : "Low",
       },
     });
 

@@ -22,6 +22,32 @@ export default function PremiumDashboardPage() {
   const [spinning, setSpinning] = useState(false);
   const [rewardResult, setRewardResult] = useState<string | null>(null);
 
+  // Reorder states
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
+
+  const handleReorder = async (orderId: string) => {
+    setReorderingId(orderId);
+    try {
+      const res = await fetch("/api/orders/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message);
+        router.push("/cart");
+      } else {
+        toast.error(data.error || data.message || "Failed to clone reorder items");
+      }
+    } catch (err) {
+      toast.error("Error executing reorder command");
+    } finally {
+      setReorderingId(null);
+    }
+  };
+
   // Fetch session data
   const loadUserData = async () => {
     try {
@@ -410,13 +436,23 @@ export default function PremiumDashboardPage() {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/orders/${order.id}`}
-                    className="flex items-center text-xs text-amber-400 hover:text-white font-bold uppercase tracking-wider border border-zinc-800 hover:border-zinc-650 rounded-xl px-4 py-2.5 transition-colors self-stretch md:self-auto justify-center"
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    <span>View Details</span>
-                  </Link>
+                  <div className="flex gap-2.5 self-stretch md:self-auto justify-center">
+                    <button
+                      onClick={() => handleReorder(order.id)}
+                      disabled={reorderingId === order.id}
+                      className="flex items-center text-xs text-white bg-zinc-950 border border-zinc-850 hover:border-zinc-650 hover:bg-zinc-900 rounded-xl px-4 py-2.5 transition-colors cursor-pointer disabled:opacity-50 font-semibold"
+                    >
+                      <span>{reorderingId === order.id ? "Reordering..." : "Reorder"}</span>
+                    </button>
+
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="flex items-center text-xs text-amber-400 hover:text-white font-bold uppercase tracking-wider border border-zinc-800 hover:border-zinc-650 rounded-xl px-4 py-2.5 transition-colors justify-center"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      <span>View Details</span>
+                    </Link>
+                  </div>
                 </div>
               );
             })}
