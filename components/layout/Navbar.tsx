@@ -100,6 +100,14 @@ export default function Navbar() {
             >
               Fashion Feed
             </Link>
+            <Link
+              href="/tryon"
+              className={`text-sm tracking-wide transition-colors ${
+                pathname === "/tryon" ? "text-amber-400 font-medium" : "text-zinc-300 hover:text-white"
+              }`}
+            >
+              Try-On Studio
+            </Link>
           </nav>
 
           {/* Search bar */}
