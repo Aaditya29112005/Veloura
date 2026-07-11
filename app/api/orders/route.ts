@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { shippingAddress, billingAddress, couponCode } = await request.json();
+    const { shippingAddress, billingAddress, couponCode, redeemCoins } = await request.json();
 
     if (!shippingAddress) {
       return NextResponse.json(
@@ -157,16 +157,29 @@ export async function POST(request: Request) {
       }
     }
 
-    const totalAmount = Math.max(0, subtotal - discount);
+    // Calculate loyalty coin redemption
+    const userDb = await db.user.findUnique({
+      where: { id: session.userId }
+    });
+    const userCoins = userDb?.loyaltyCoins || 0;
+    let coinsToRedeem = 0;
+    if (redeemCoins) {
+      // 100 coins = $1 reduction
+      const maxCoinsRequired = Math.floor(Math.max(0, subtotal - discount) * 100);
+      const requestedCoins = typeof redeemCoins === "number" ? redeemCoins : userCoins;
+      coinsToRedeem = Math.min(userCoins, requestedCoins, maxCoinsRequired);
+    }
+    const coinsDiscount = coinsToRedeem / 100;
+    const finalAmount = Math.max(0, subtotal - discount - coinsDiscount);
 
-    // 3. Database transaction: Create order, decrement stock, increment coupon count, clear cart
+    // 3. Database transaction: Create order, decrement stock, update coins & badges, clear cart
     const order = await db.$transaction(async (tx) => {
       // Create the order
       const newOrder = await tx.order.create({
         data: {
           userId: session.userId,
           status: "PENDING",
-          totalAmount,
+          totalAmount: finalAmount,
           shippingAddress,
           billingAddress: billingAddress || null,
           couponId: coupon ? coupon.id : null,
@@ -185,7 +198,7 @@ export async function POST(request: Request) {
         },
       });
 
-      // Decrement stock for each product
+      // Decrement stock and increment purchasedCount for each product
       for (const item of cart.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -193,6 +206,9 @@ export async function POST(request: Request) {
             stock: {
               decrement: item.quantity,
             },
+            purchasedCount: {
+              increment: item.quantity,
+            }
           },
         });
       }
@@ -208,6 +224,26 @@ export async function POST(request: Request) {
           },
         });
       }
+
+      // Deduct spent coins and add earned coins (1 coin per dollar spent)
+      const coinsEarned = Math.floor(finalAmount);
+      const userOrdersCount = await tx.order.count({ where: { userId: session.userId } });
+      const newBadges = [...(userDb?.badges || [])];
+      
+      if (userOrdersCount + 1 >= 3 && !newBadges.includes("VIP Buyer")) {
+        newBadges.push("VIP Buyer");
+      }
+      if (cart.items.length >= 3 && !newBadges.includes("Collector")) {
+        newBadges.push("Collector");
+      }
+
+      await tx.user.update({
+        where: { id: session.userId },
+        data: {
+          loyaltyCoins: userCoins - coinsToRedeem + coinsEarned,
+          badges: newBadges
+        }
+      });
 
       // Clear the cart items
       await tx.cartItem.deleteMany({

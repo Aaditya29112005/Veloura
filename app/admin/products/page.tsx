@@ -24,6 +24,37 @@ export default function AdminProductsPage() {
   const [colorInput, setColorInput] = useState("Black, White, Charcoal");
   const [images, setImages] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
+
+  const generateAIDescription = async () => {
+    if (!name.trim()) {
+      toast.error("Please enter a Garment Name first");
+      return;
+    }
+    const cat = categories.find(c => c.id === categoryId);
+    const categoryName = cat ? cat.name : "Garments";
+
+    setGeneratingAI(true);
+    try {
+      const res = await fetch("/api/ai/describe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, category: categoryName })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setDescription(data.description);
+        toast.success("AI SEO copy generated successfully!");
+      } else {
+        toast.error("Failed to generate AI description");
+      }
+    } catch (err) {
+      toast.error("Error communicating with AI descriptor");
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
 
   // Load catalog items and categories
   const loadData = async () => {
@@ -325,7 +356,18 @@ export default function AdminProductsPage() {
 
               {/* Description */}
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Garment Description *</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Garment Description *</label>
+                  <button
+                    type="button"
+                    onClick={generateAIDescription}
+                    disabled={generatingAI}
+                    className="text-[9px] uppercase tracking-wider text-amber-400 hover:text-white font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    <span>✨</span>
+                    <span>{generatingAI ? "Writing Copy..." : "Write AI SEO Description"}</span>
+                  </button>
+                </div>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}

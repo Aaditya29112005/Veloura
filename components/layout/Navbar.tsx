@@ -76,17 +76,30 @@ export default function Navbar() {
             >
               All Products
             </Link>
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/products?category=${cat.slug}`}
-                className={`text-sm tracking-wide transition-colors ${
-                  pathname.includes(cat.slug) ? "text-amber-400 font-medium" : "text-zinc-300 hover:text-white"
-                }`}
-              >
-                {cat.name}
-              </Link>
-            ))}
+            <Link
+              href="/stylist"
+              className={`text-sm tracking-wide transition-colors ${
+                pathname === "/stylist" ? "text-amber-400 font-medium" : "text-zinc-300 hover:text-white"
+              }`}
+            >
+              AI Stylist
+            </Link>
+            <Link
+              href="/builder"
+              className={`text-sm tracking-wide transition-colors ${
+                pathname === "/builder" ? "text-amber-400 font-medium" : "text-zinc-300 hover:text-white"
+              }`}
+            >
+              Outfit Builder
+            </Link>
+            <Link
+              href="/feed"
+              className={`text-sm tracking-wide transition-colors ${
+                pathname === "/feed" ? "text-amber-400 font-medium" : "text-zinc-300 hover:text-white"
+              }`}
+            >
+              Fashion Feed
+            </Link>
           </nav>
 
           {/* Search bar */}

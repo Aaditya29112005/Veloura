@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { LayoutDashboard, ShoppingCart, Users, Receipt, Tag, ArrowLeft, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Users, Receipt, Tag, ArrowLeft, ShieldAlert, Sparkles } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -39,6 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/products", label: "Products Catalog", icon: ShoppingCart },
     { href: "/admin/orders", label: "Order Fulfilment", icon: Receipt },
     { href: "/admin/coupons", label: "Discount Coupons", icon: Tag },
+    { href: "/admin/predictions", label: "Predictive Intelligence", icon: Sparkles },
   ];
 
   return (

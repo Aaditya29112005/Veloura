@@ -32,6 +32,8 @@ async function main() {
       name: "Jane Doe",
       passwordHash: passwordHashUser,
       role: "USER",
+      loyaltyCoins: 450,
+      badges: ["Explorer", "VIP Buyer"],
     },
   });
 
@@ -381,6 +383,10 @@ async function main() {
         categoryId: category.id,
         sizes: item.sizes,
         colors: item.colors,
+        viewsCount: Math.floor(Math.random() * 250) + 50,
+        purchasedCount: Math.floor(Math.random() * 60) + 10,
+        wishlistedCount: Math.floor(Math.random() * 40) + 5,
+        colorHarmonies: item.colors.concat(["Off-White", "Cream", "Black", "Charcoal", "Grey", "White", "Navy"]).slice(0, 5),
       },
     });
 
