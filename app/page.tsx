@@ -1,15 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Shield, PlaneTakeoff, Award } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Sparkles, Shield, PlaneTakeoff, Award, MessageSquare, Send, X, Volume2 } from "lucide-react";
+import { toast } from "react-hot-toast";
+
+// Luxury fashion background video URLs from public stock feeds
+const BACKGROUND_VIDEOS = [
+  "https://assets.mixkit.co/videos/preview/mixkit-fashion-model-walking-in-slow-motion-41865-large.mp4",
+  "https://assets.mixkit.co/videos/preview/mixkit-woman-in-fashionable-black-clothes-walking-slowly-41861-large.mp4"
+];
 
 export default function HomePage() {
   const [trendingProducts, setTrendingProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  // Video transitions
+  const [activeVideoIdx, setActiveVideoIdx] = useState(0);
+
+  // Floating AI Orb States
+  const [isOrbOpen, setIsOrbOpen] = useState(false);
+  const [orbQuery, setOrbQuery] = useState("");
+  const [isOrbThinking, setIsOrbThinking] = useState(false);
+
+  // Custom magnetic glow cursor coordinates
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
+  const [cursorHovering, setCursorHovering] = useState(false);
 
   useEffect(() => {
-    // Fetch a subset of products to feature on homepage
+    // Fetch featured products
     fetch("/api/products?limit=4")
       .then((res) => res.json())
       .then((data) => {
@@ -19,110 +40,197 @@ export default function HomePage() {
       })
       .catch((err) => console.error("Error loading home products", err))
       .finally(() => setLoading(false));
+
+    // Video transition loops (fades between loops)
+    const interval = setInterval(() => {
+      setActiveVideoIdx((prev) => (prev + 1) % BACKGROUND_VIDEOS.length);
+    }, 12000);
+
+    // Mouse glow tracker
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, []);
 
+  // Quick prompt triggers routing directly to AI Stylist
+  const handleQuickPromptClick = (promptText: string) => {
+    setIsOrbOpen(false);
+    toast.success(`Loading coordinate suggestions for: "${promptText}"`);
+    router.push(`/stylist?prompt=${encodeURIComponent(promptText)}`);
+  };
+
+  const handleOrbAskSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orbQuery.trim()) return;
+
+    setIsOrbThinking(true);
+    const query = orbQuery;
+    setOrbQuery("");
+    
+    setTimeout(() => {
+      setIsOrbThinking(false);
+      setIsOrbOpen(false);
+      router.push(`/stylist?prompt=${encodeURIComponent(query)}`);
+    }, 1200);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#060606] text-[#F7F5F2] font-sans selection:bg-[#D6B36A]/30 selection:text-[#F6E7B4] relative overflow-hidden">
       
-      {/* 1. Hero Section */}
-      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
-        {/* Background Editorial Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-10000 scale-105"
-          style={{ 
-            backgroundImage: "linear-gradient(to bottom, rgba(9,9,11,0.2) 0%, rgba(9,9,11,0.85) 90%), url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80')" 
-          }}
-        />
+      {/* Dynamic Magnetic Glow Cursor Trail (Hidden on touch screens) */}
+      <div 
+        className="hidden md:block fixed pointer-events-none z-50 mix-blend-screen transition-transform duration-100 ease-out -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+        style={{
+          left: `${mousePos.x}px`,
+          top: `${mousePos.y}px`,
+          width: cursorHovering ? "120px" : "80px",
+          height: cursorHovering ? "120px" : "80px",
+          background: "radial-gradient(circle, rgba(214,179,106,0.15) 0%, transparent 70%)"
+        }}
+      />
+
+      {/* Grainy Noise Overlay Texture for Film-like aesthetic */}
+      <div className="pointer-events-none fixed inset-0 z-40 opacity-[0.02] mix-blend-soft-light bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
+
+      {/* 1. Fullscreen Cinematic Hero Section */}
+      <section 
+        className="relative h-screen flex items-center justify-center overflow-hidden border-b border-zinc-950"
+        onMouseEnter={() => setCursorHovering(true)}
+        onMouseLeave={() => setCursorHovering(false)}
+      >
         
-        {/* Hero Content */}
-        <div className="relative max-w-5xl mx-auto px-4 text-center z-10 space-y-6">
-          <div className="inline-flex items-center space-x-1.5 bg-white/5 border border-white/10 rounded-full px-4.5 py-1.5 text-[10px] uppercase tracking-widest text-amber-400 font-semibold mb-2">
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>Luxury Fashion. Effortlessly Delivered.</span>
-          </div>
-          
-          <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-white leading-tight uppercase">
-            Timeless Design.<br />
-            <span className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-              Modern Silhouettes.
-            </span>
-          </h1>
-          
-          <p className="text-zinc-400 text-sm md:text-base max-w-xl mx-auto font-light leading-relaxed">
-            Crafted from raw Japanese selvedge denim, pure Mongolian cashmere, and Italian double-faced wool. Curated collections built to endure.
-          </p>
-          
-          <div className="pt-6">
-            <Link
-              href="/products"
-              className="inline-flex items-center space-x-2 text-black bg-white hover:bg-zinc-200 font-bold uppercase tracking-wider text-xs px-8 py-4 rounded-full transition-all hover:scale-105"
-            >
-              <span>Explore Collection</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+        {/* Background Cinematic Video Loop with slow zoom-in transition */}
+        <div className="absolute inset-0 w-full h-full scale-[1.08] animate-[slowZoom_30s_infinite_alternate]">
+          <video
+            src={BACKGROUND_VIDEOS[activeVideoIdx]}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover transition-opacity duration-1500 opacity-[0.4]"
+          />
         </div>
 
-        {/* Scroll indicator overlay */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-zinc-500 text-[10px] uppercase tracking-widest animate-bounce">
-          Scroll down to discover
+        {/* Premium Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#060606]/85 to-[#060606]" />
+
+        {/* Subtle Gold Light Beam */}
+        <div className="absolute top-[-20%] left-[30%] w-[600px] h-[600px] rounded-full bg-[#D6B36A]/5 blur-[160px] pointer-events-none" />
+
+        {/* Hero Content */}
+        <div className="relative max-w-5xl mx-auto px-6 text-center z-10 space-y-8">
+          
+          {/* Tagline */}
+          <div className="inline-flex items-center space-x-2 bg-white/5 border border-white/10 backdrop-blur-xl rounded-full px-5 py-2 text-[9px] uppercase tracking-[0.25em] text-[#D6B36A] font-bold">
+            <Sparkles className="w-3.5 h-3.5 text-[#D6B36A] animate-pulse" />
+            <span>Luxury Fashion. Powered by AI.</span>
+          </div>
+
+          {/* Title letter-by-word reveal details */}
+          <h1 className="font-serif text-5xl md:text-8xl font-light tracking-tight text-white leading-[1.05] uppercase">
+            <span className="block overflow-hidden">
+              <span className="inline-block animate-[fadeInUp_1s_ease-out_0.2s_both]">Timeless Design.</span>
+            </span>
+            <span className="block overflow-hidden">
+              <span className="inline-block bg-gradient-to-r from-[#F6E7B4] via-[#D6B36A] to-[#9E7A39] bg-clip-text text-transparent font-normal animate-[fadeInUp_1s_ease-out_0.5s_both]">
+                Modern Silhouettes.
+              </span>
+            </span>
+          </h1>
+
+          <p className="text-zinc-400 text-xs md:text-sm max-w-lg mx-auto font-light leading-relaxed tracking-wider animate-[fadeIn_1.5s_ease-out_0.8s_both] opacity-80">
+            Crafted from raw Japanese selvedge denim, pure Mongolian cashmere, and Italian double-faced wool. Curated collections built to endure.
+          </p>
+
+          {/* Action CTAs */}
+          <div className="pt-4 flex flex-wrap justify-center gap-4 animate-[fadeIn_1.5s_ease-out_1s_both]">
+            <Link
+              href="/tryon"
+              className="inline-flex items-center space-x-2.5 text-black bg-gradient-to-r from-[#F6E7B4] via-[#D6B36A] to-[#9E7A39] hover:brightness-110 font-bold uppercase tracking-widest text-[10px] px-8 py-4.5 rounded-full transition-all duration-300 hover:-translate-y-0.5 shadow-lg shadow-[#D6B36A]/10 cursor-pointer"
+            >
+              <span>Virtual Try-On</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/products"
+              className="inline-flex items-center space-x-2.5 text-white bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-xl font-bold uppercase tracking-widest text-[10px] px-8 py-4.5 rounded-full transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
+            >
+              <span>Explore Closet</span>
+            </Link>
+          </div>
+
         </div>
+
+        {/* Bottom Scroll indicator indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 text-zinc-550 text-[9px] uppercase tracking-[0.2em] font-medium opacity-60">
+          <span>Scroll to Discover</span>
+          <div className="w-[1px] h-8 bg-gradient-to-b from-zinc-600 to-transparent animate-[scrollLine_2s_infinite]" />
+        </div>
+
       </section>
 
       {/* 2. Visual Categories Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-        <div className="text-center mb-12">
-          <h2 className="font-serif text-3xl font-semibold tracking-wide uppercase">Shop by Category</h2>
-          <div className="h-0.5 w-12 bg-amber-400 mx-auto mt-3" />
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 py-32 w-full space-y-16">
+        
+        <div className="text-center space-y-2.5">
+          <span className="text-[9px] uppercase tracking-[0.3em] text-[#D6B36A] font-bold block">The Collections</span>
+          <h2 className="font-serif text-3xl md:text-5xl font-light uppercase tracking-wide">Shop by Category</h2>
+          <div className="h-[1px] w-16 bg-gradient-to-r from-transparent via-[#D6B36A] to-transparent mx-auto pt-1" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Card 1: Outerwear */}
-          <Link href="/products?category=outerwear" className="group relative h-96 overflow-hidden rounded-2xl block">
+          <Link href="/products?category=outerwear" className="group relative h-[450px] overflow-hidden rounded-3xl block border border-zinc-900 hover:border-[#D6B36A]/30 transition-all duration-500">
             <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-              style={{ backgroundImage: "linear-gradient(to top, rgba(9,9,11,0.9) 10%, rgba(9,9,11,0) 60%), url('https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&auto=format&fit=crop&q=80')" }}
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-100 group-hover:scale-105"
+              style={{ backgroundImage: "linear-gradient(to top, #060606 5%, rgba(6,6,6,0.1) 70%), url('https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&auto=format&fit=crop&q=80')" }}
             />
-            <div className="absolute bottom-6 left-6 right-6">
-              <h3 className="font-serif text-xl font-bold text-white mb-1">Outerwear</h3>
-              <p className="text-zinc-400 text-xs font-light">Tailored coats, jackets, and shearling.</p>
+            <div className="absolute bottom-8 left-8 right-8 space-y-1">
+              <h3 className="font-serif text-xl font-medium text-[#F7F5F2]">Outerwear</h3>
+              <p className="text-zinc-450 text-[10px] tracking-wider uppercase font-light">Tailored coats & blazers</p>
             </div>
           </Link>
 
           {/* Card 2: Knitwear */}
-          <Link href="/products?category=knitwear" className="group relative h-96 overflow-hidden rounded-2xl block">
+          <Link href="/products?category=knitwear" className="group relative h-[450px] overflow-hidden rounded-3xl block border border-zinc-900 hover:border-[#D6B36A]/30 transition-all duration-500">
             <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-              style={{ backgroundImage: "linear-gradient(to top, rgba(9,9,11,0.9) 10%, rgba(9,9,11,0) 60%), url('https://images.unsplash.com/photo-1574164904299-3a102b110380?w=500&auto=format&fit=crop&q=80')" }}
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-100 group-hover:scale-105"
+              style={{ backgroundImage: "linear-gradient(to top, #060606 5%, rgba(6,6,6,0.1) 70%), url('https://images.unsplash.com/photo-1574164904299-3a102b110380?w=600&auto=format&fit=crop&q=80')" }}
             />
-            <div className="absolute bottom-6 left-6 right-6">
-              <h3 className="font-serif text-xl font-bold text-white mb-1">Knitwear</h3>
-              <p className="text-zinc-400 text-xs font-light">Italian merino wool and soft cashmeres.</p>
+            <div className="absolute bottom-8 left-8 right-8 space-y-1">
+              <h3 className="font-serif text-xl font-medium text-[#F7F5F2]">Knitwear</h3>
+              <p className="text-zinc-450 text-[10px] tracking-wider uppercase font-light">Merino wool & cashmere</p>
             </div>
           </Link>
 
           {/* Card 3: Shirts */}
-          <Link href="/products?category=tops-shirts" className="group relative h-96 overflow-hidden rounded-2xl block">
+          <Link href="/products?category=tops-shirts" className="group relative h-[450px] overflow-hidden rounded-3xl block border border-zinc-900 hover:border-[#D6B36A]/30 transition-all duration-500">
             <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-              style={{ backgroundImage: "linear-gradient(to top, rgba(9,9,11,0.9) 10%, rgba(9,9,11,0) 60%), url('https://images.unsplash.com/photo-1603252109303-2751441dd157?w=500&auto=format&fit=crop&q=80')" }}
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-100 group-hover:scale-105"
+              style={{ backgroundImage: "linear-gradient(to top, #060606 5%, rgba(6,6,6,0.1) 70%), url('https://images.unsplash.com/photo-1603252109303-2751441dd157?w=600&auto=format&fit=crop&q=80')" }}
             />
-            <div className="absolute bottom-6 left-6 right-6">
-              <h3 className="font-serif text-xl font-bold text-white mb-1">Tops & Shirts</h3>
-              <p className="text-zinc-400 text-xs font-light">Mulberry silk blouses and Oxford cottons.</p>
+            <div className="absolute bottom-8 left-8 right-8 space-y-1">
+              <h3 className="font-serif text-xl font-medium text-[#F7F5F2]">Tops & Shirts</h3>
+              <p className="text-zinc-450 text-[10px] tracking-wider uppercase font-light">Mulberry silk & cottons</p>
             </div>
           </Link>
 
           {/* Card 4: Bottoms */}
-          <Link href="/products?category=bottoms" className="group relative h-96 overflow-hidden rounded-2xl block">
+          <Link href="/products?category=bottoms" className="group relative h-[450px] overflow-hidden rounded-3xl block border border-zinc-900 hover:border-[#D6B36A]/30 transition-all duration-500">
             <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-              style={{ backgroundImage: "linear-gradient(to top, rgba(9,9,11,0.9) 10%, rgba(9,9,11,0) 60%), url('https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=500&auto=format&fit=crop&q=80')" }}
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-100 group-hover:scale-105"
+              style={{ backgroundImage: "linear-gradient(to top, #060606 5%, rgba(6,6,6,0.1) 70%), url('https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&auto=format&fit=crop&q=80')" }}
             />
-            <div className="absolute bottom-6 left-6 right-6">
-              <h3 className="font-serif text-xl font-bold text-white mb-1">Bottoms</h3>
-              <p className="text-zinc-400 text-xs font-light">Pleated trousers and Japanese selvedge denim.</p>
+            <div className="absolute bottom-8 left-8 right-8 space-y-1">
+              <h3 className="font-serif text-xl font-medium text-[#F7F5F2]">Bottoms</h3>
+              <p className="text-zinc-450 text-[10px] tracking-wider uppercase font-light">Selvedge denim & trousers</p>
             </div>
           </Link>
 
@@ -130,49 +238,51 @@ export default function HomePage() {
       </section>
 
       {/* 3. Featured / Trending Products Grid */}
-      <section className="bg-zinc-900 border-t border-b border-zinc-800 py-20 w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-[#0E0E0E] border-y border-zinc-950 py-32 w-full">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
           
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-4 text-center sm:text-left">
-            <div>
-              <h2 className="font-serif text-3xl font-semibold tracking-wide uppercase">Trending Arrivals</h2>
-              <p className="text-zinc-400 text-xs font-light mt-1">Curated picks from our most popular pieces.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-4 text-center sm:text-left">
+            <div className="space-y-1.5">
+              <span className="text-[9px] uppercase tracking-[0.3em] text-[#D6B36A] font-bold block">Highly Coveted</span>
+              <h2 className="font-serif text-3xl md:text-5xl font-light uppercase tracking-wide text-white">Trending Arrivals</h2>
             </div>
             <Link
               href="/products"
-              className="text-xs uppercase tracking-wider font-bold text-amber-400 hover:text-white transition-colors flex items-center space-x-1.5"
+              className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#D6B36A] hover:text-white transition-colors flex items-center space-x-2"
             >
-              <span>View All Products</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>View All Collection</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="animate-pulse space-y-4">
-                  <div className="bg-zinc-800 rounded-2xl h-80 w-full" />
-                  <div className="h-4 bg-zinc-800 rounded w-2/3" />
-                  <div className="h-3 bg-zinc-800 rounded w-1/3" />
+                <div key={i} className="space-y-4">
+                  <div className="bg-zinc-950 border border-zinc-900 rounded-3xl h-96 w-full animate-pulse" />
+                  <div className="h-4 bg-zinc-900 rounded w-2/3 animate-pulse" />
+                  <div className="h-3 bg-zinc-900 rounded w-1/3 animate-pulse" />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {trendingProducts.map((product) => {
                 const primaryImage = product.images.find((img: any) => img.isPrimary)?.url || product.images[0]?.url;
                 return (
-                  <div key={product.id} className="group relative flex flex-col bg-zinc-950 border border-zinc-850 rounded-2xl p-3 hover:border-amber-400/40 transition-all duration-300">
+                  <div 
+                    key={product.id} 
+                    className="group relative flex flex-col bg-[#060606] border border-zinc-900 rounded-3xl p-4 hover:border-[#D6B36A]/20 transition-all duration-500 shadow-md shadow-black/40 hover:-translate-y-1"
+                  >
                     
-                    {/* Image Area */}
-                    <div className="relative rounded-xl overflow-hidden aspect-[3/4] mb-4 bg-zinc-900">
-                      {product.stock <= 0 && (
-                        <span className="absolute top-3 left-3 z-10 bg-red-650 text-white font-bold text-[9px] uppercase tracking-widest px-2 py-1 rounded">
+                    {/* Image Area with luxury border details */}
+                    <div className="relative rounded-2xl overflow-hidden aspect-[3/4] mb-5 bg-[#0E0E0E]">
+                      {product.stock <= 0 ? (
+                        <span className="absolute top-4 left-4 z-10 bg-red-950/80 border border-red-800/30 text-red-300 font-bold text-[8px] uppercase tracking-[0.2em] px-3 py-1.5 rounded-full">
                           Sold Out
                         </span>
-                      )}
-                      {product.stock <= 5 && product.stock > 0 && (
-                        <span className="absolute top-3 left-3 z-10 bg-amber-600 text-white font-bold text-[9px] uppercase tracking-widest px-2 py-1 rounded">
+                      ) : product.stock <= 5 && (
+                        <span className="absolute top-4 left-4 z-10 bg-amber-950/80 border border-amber-800/30 text-amber-300 font-bold text-[8px] uppercase tracking-[0.2em] px-3 py-1.5 rounded-full">
                           Low Stock
                         </span>
                       )}
@@ -181,17 +291,17 @@ export default function HomePage() {
                         <img
                           src={primaryImage}
                           alt={product.name}
-                          className="object-cover w-full h-full transition-transform duration-750 group-hover:scale-105"
+                          className="object-cover w-full h-full transition-transform duration-1000 scale-100 group-hover:scale-[1.04]"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-650">No Image</div>
+                        <div className="w-full h-full flex items-center justify-center text-zinc-750">No Image</div>
                       )}
 
-                      {/* Hover Overlay Button */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                      {/* Hover details overlay */}
+                      <div className="absolute inset-0 bg-[#060606]/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
                         <Link
                           href={`/products/${product.slug}`}
-                          className="bg-white text-black font-semibold text-xs uppercase tracking-wider px-6 py-3 rounded-full hover:bg-zinc-200 transition-colors"
+                          className="bg-white text-black font-bold text-[9px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-[#F7F5F2] transition-colors cursor-pointer"
                         >
                           View Details
                         </Link>
@@ -199,21 +309,21 @@ export default function HomePage() {
                     </div>
 
                     {/* Metadata details */}
-                    <div className="px-1 pb-2 flex-grow flex flex-col justify-between">
+                    <div className="px-1.5 pb-2 flex-grow flex flex-col justify-between">
                       <div>
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold block mb-1">
+                        <span className="text-[8px] text-zinc-550 uppercase tracking-[0.25em] font-bold block mb-1">
                           {product.category?.name}
                         </span>
                         <Link
                           href={`/products/${product.slug}`}
-                          className="font-serif text-sm font-semibold text-zinc-100 hover:text-amber-400 transition-colors line-clamp-1"
+                          className="font-serif text-base font-medium text-zinc-200 hover:text-[#D6B36A] transition-colors line-clamp-1"
                         >
                           {product.name}
                         </Link>
                       </div>
-                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-900">
-                        <span className="text-sm font-semibold text-zinc-200">${product.price.toFixed(2)}</span>
-                        <span className="text-[10px] text-zinc-500 font-light">{product.colors.join(", ")}</span>
+                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-900/50">
+                        <span className="text-sm font-semibold text-zinc-350">${product.price.toFixed(2)}</span>
+                        <span className="text-[9px] text-zinc-550 font-light">{product.colors.join(", ")}</span>
                       </div>
                     </div>
 
@@ -226,45 +336,45 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. Veloura Values / Trust Badges */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
+      {/* 4. Veloura Core Values / Trust Badges */}
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 py-32 w-full">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
-          <div className="text-center p-6 space-y-3">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 text-amber-400 mb-2">
-              <Award className="w-6 h-6" />
+          <div className="text-center p-6 space-y-3.5 bg-gradient-to-b from-[#0E0E0E] to-transparent border border-zinc-900/55 rounded-3xl">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-950 border border-zinc-900 text-[#D6B36A] mb-1">
+              <Award className="w-5 h-5" />
             </div>
-            <h3 className="font-serif text-base font-bold text-white uppercase tracking-wider">Premium Fibers</h3>
+            <h3 className="font-serif text-sm font-bold text-white uppercase tracking-widest">Premium Fibers</h3>
             <p className="text-zinc-500 text-xs font-light leading-relaxed">
               We exclusively use Mongolian cashmere, long-staple cotton, and certified fine wools. Built for durability.
             </p>
           </div>
 
-          <div className="text-center p-6 space-y-3">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 text-amber-400 mb-2">
-              <Shield className="w-6 h-6" />
+          <div className="text-center p-6 space-y-3.5 bg-gradient-to-b from-[#0E0E0E] to-transparent border border-zinc-900/55 rounded-3xl">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-950 border border-zinc-900 text-[#D6B36A] mb-1">
+              <Shield className="w-5 h-5" />
             </div>
-            <h3 className="font-serif text-base font-bold text-white uppercase tracking-wider">Secure Logistics</h3>
+            <h3 className="font-serif text-sm font-bold text-white uppercase tracking-widest">Secure Logistics</h3>
             <p className="text-zinc-500 text-xs font-light leading-relaxed">
               All deliveries are tracked and insured. Verified token access guards checkout sessions and customer data.
             </p>
           </div>
 
-          <div className="text-center p-6 space-y-3">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 text-amber-400 mb-2">
-              <PlaneTakeoff className="w-6 h-6" />
+          <div className="text-center p-6 space-y-3.5 bg-gradient-to-b from-[#0E0E0E] to-transparent border border-zinc-900/55 rounded-3xl">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-950 border border-zinc-900 text-[#D6B36A] mb-1">
+              <PlaneTakeoff className="w-5 h-5" />
             </div>
-            <h3 className="font-serif text-base font-bold text-white uppercase tracking-wider">Free Global Delivery</h3>
+            <h3 className="font-serif text-sm font-bold text-white uppercase tracking-widest">Free Global Delivery</h3>
             <p className="text-zinc-500 text-xs font-light leading-relaxed">
               Enjoy free carbon-neutral shipping and returns on all international orders exceeding fifty dollars.
             </p>
           </div>
 
-          <div className="text-center p-6 space-y-3">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 text-amber-400 mb-2">
-              <Sparkles className="w-6 h-6" />
+          <div className="text-center p-6 space-y-3.5 bg-gradient-to-b from-[#0E0E0E] to-transparent border border-zinc-900/55 rounded-3xl">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-950 border border-zinc-900 text-[#D6B36A] mb-1">
+              <Sparkles className="w-5 h-5" />
             </div>
-            <h3 className="font-serif text-base font-bold text-white uppercase tracking-wider">Limited Iterations</h3>
+            <h3 className="font-serif text-sm font-bold text-white uppercase tracking-widest">Limited Iterations</h3>
             <p className="text-zinc-500 text-xs font-light leading-relaxed">
               We operate in small production runs to avoid waste. Each item is individually numbered and tracked.
             </p>
@@ -272,6 +382,97 @@ export default function HomePage() {
 
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 5. FLOATING AI ORB INTERACTION COMPONENT */}
+      {/* ========================================================================= */}
+      <div className="fixed bottom-6 right-6 z-50 print:hidden flex flex-col items-end space-y-3">
+        
+        {/* Floating AI Orb Panel overlay */}
+        {isOrbOpen && (
+          <div className="w-[320px] bg-zinc-950/90 border border-zinc-800 backdrop-blur-2xl p-5 rounded-3xl shadow-2xl shadow-black/85 animate-[fadeInUp_0.3s_ease-out] text-left space-y-4">
+            
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[8px] font-bold text-[#D6B36A] uppercase tracking-[0.25em] block">Wardrobe Intelligence</span>
+                <h4 className="font-serif text-sm font-bold text-white">Ask Veloura Stylist</h4>
+              </div>
+              <button 
+                onClick={() => setIsOrbOpen(false)}
+                className="p-1 rounded-lg text-zinc-550 hover:text-white hover:bg-zinc-900/40 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Glowing active voice simulator lines */}
+            <div className="flex items-center justify-center gap-1 py-1.5 border-y border-zinc-900/60">
+              <Volume2 className="w-3.5 h-3.5 text-[#D6B36A]" />
+              <div className="flex items-center gap-0.5 h-4">
+                <span className="w-[2px] bg-[#D6B36A] rounded-full animate-[soundWave_1.2s_infinite_alternate]" />
+                <span className="w-[2px] bg-[#D6B36A] rounded-full animate-[soundWave_0.8s_infinite_alternate_0.2s] h-3" />
+                <span className="w-[2px] bg-[#D6B36A] rounded-full animate-[soundWave_1.5s_infinite_alternate_0.1s] h-2" />
+                <span className="w-[2px] bg-[#D6B36A] rounded-full animate-[soundWave_1.0s_infinite_alternate_0.3s] h-3" />
+                <span className="w-[2px] bg-[#D6B36A] rounded-full animate-[soundWave_1.3s_infinite_alternate_0.0s] h-1" />
+              </div>
+              <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold ml-1.5">Orb Synthesizer Active</span>
+            </div>
+
+            {/* Quick Prompts Closet */}
+            <div className="space-y-1.5">
+              <span className="text-[8px] uppercase tracking-widest text-zinc-555 font-bold block mb-1">Coordinated Prompts</span>
+              <button
+                onClick={() => handleQuickPromptClick("Find me a luxury black outfit under $500")}
+                className="w-full text-left bg-zinc-900/45 hover:bg-zinc-900 border border-zinc-900/50 hover:border-zinc-800 text-zinc-400 hover:text-white text-[10px] py-2 px-3 rounded-xl transition-all cursor-pointer font-light block"
+              >
+                "Find me a luxury black outfit under $500"
+              </button>
+              <button
+                onClick={() => handleQuickPromptClick("Suggest coordinate accessories to match a cashmere knit sweater")}
+                className="w-full text-left bg-zinc-900/45 hover:bg-zinc-900 border border-zinc-900/50 hover:border-zinc-800 text-zinc-400 hover:text-white text-[10px] py-2 px-3 rounded-xl transition-all cursor-pointer font-light block"
+              >
+                "What coordinates match cashmere knit?"
+              </button>
+            </div>
+
+            {/* Input prompt query */}
+            <form onSubmit={handleOrbAskSubmit} className="flex gap-2 pt-1">
+              <input
+                type="text"
+                value={orbQuery}
+                onChange={(e) => setOrbQuery(e.target.value)}
+                placeholder="Ask style coordination..."
+                className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D6B36A]"
+                required
+              />
+              <button
+                type="submit"
+                disabled={isOrbThinking}
+                className="bg-white text-black font-semibold p-2 rounded-xl hover:bg-zinc-200 transition-colors cursor-pointer flex items-center justify-center flex-shrink-0"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
+
+          </div>
+        )}
+
+        {/* Pulse Glowing Sphere Orb Trigger */}
+        <button
+          onClick={() => setIsOrbOpen(!isOrbOpen)}
+          className="relative w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-black/60 bg-gradient-to-tr from-[#9E7A39] via-[#D6B36A] to-[#F6E7B4] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer group"
+          title="Open AI Assistant"
+        >
+          {/* Internal rotating light layer */}
+          <div className="absolute inset-0.5 rounded-full bg-black/85 group-hover:bg-black/75 transition-colors flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-[#D6B36A] group-hover:text-white transition-colors animate-pulse" />
+          </div>
+          
+          {/* Subtle outer pulsing glowing orb ring */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#9E7A39] via-[#D6B36A] to-[#F6E7B4] opacity-35 blur-md animate-[pulseGlow_2.5s_infinite_alternate]" />
+        </button>
+
+      </div>
 
     </div>
   );
