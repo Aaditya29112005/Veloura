@@ -193,7 +193,7 @@ async function main() {
       sizes: ["S", "M", "L"],
       colors: ["Oatmeal", "Black", "Dusty Pink"],
       images: [
-        "https://images.unsplash.com/photo-1574164904299-3a102b110380?w=600&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&auto=format&fit=crop&q=80",
       ],
     },
     {
@@ -353,7 +353,7 @@ async function main() {
       sizes: ["S", "M", "L"],
       colors: ["Tan", "Black"],
       images: [
-        "https://images.unsplash.com/photo-1583300826568-0b7410066b7a?w=600&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1551163943-3f6a855d1153?w=600&auto=format&fit=crop&q=80",
       ],
     },
     {

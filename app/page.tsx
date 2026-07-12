@@ -354,7 +354,7 @@ export default function HomePage() {
           <Link href="/products?category=knitwear" className="group relative h-[450px] overflow-hidden rounded-3xl block border border-zinc-900 hover:border-[#D6B36A]/30 transition-all duration-500">
             <div 
               className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-100 group-hover:scale-105"
-              style={{ backgroundImage: "linear-gradient(to top, #060606 5%, rgba(6,6,6,0.1) 70%), url('https://images.unsplash.com/photo-1574164904299-3a102b110380?w=600&auto=format&fit=crop&q=80')" }}
+              style={{ backgroundImage: "linear-gradient(to top, #060606 5%, rgba(6,6,6,0.1) 70%), url('https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&auto=format&fit=crop&q=80')" }}
             />
             <div className="absolute bottom-8 left-8 right-8 space-y-1">
               <h3 className="font-serif text-xl font-medium text-[#F7F5F2]">Knitwear</h3>
