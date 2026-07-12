@@ -8,7 +8,11 @@ function decodeJwt(token: string) {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
     const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = base64.length % 4;
+    if (pad) {
+      base64 += "=".repeat(4 - pad);
+    }
     
     // Polyfill atob/decodeURIComponent for Unicode support
     const jsonPayload = decodeURIComponent(
