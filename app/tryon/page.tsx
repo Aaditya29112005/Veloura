@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowLeft, Upload, RefreshCw, Download, Save, MessageSquare, HelpCircle, Heart, Trash2 } from "lucide-react";
+import { Sparkles, ArrowLeft, Upload, RefreshCw, Download, Save, MessageSquare, HelpCircle, Heart, Trash2, Camera, Eye, Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 // Preset model images
@@ -19,6 +19,23 @@ export default function VirtualTryOnPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<string>(PRESET_MODELS[0].url);
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(true); // default model is pre-scanned
+
+  // Camera scan simulation
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraScanProgress, setCameraScanProgress] = useState(0);
+  const [backgroundRemoved, setBackgroundRemoved] = useState(false);
+
+  // 360 viewer state
+  const [is360Active, setIs360Active] = useState(false);
+  const [rotationAngle, setRotationAngle] = useState(0);
+  const [isRotating, setIsRotating] = useState(false);
+  const [startX, setStartX] = useState(0);
+
+  // AI Closet uploads
+  const [myClosetUploads, setMyClosetUploads] = useState<string[]>([]);
+
+  // Active occasion generator tag
+  const [activeOccasion, setActiveOccasion] = useState<string>("");
 
   // Computer Vision Landmarks (Shoulder left/right, Waist left/right, Hips left/right)
   const [landmarks, setLandmarks] = useState<any>({
@@ -163,6 +180,49 @@ export default function VirtualTryOnPage() {
       confidence: "94%"
     });
     toast.success("Size calculated using predictive regression model!");
+  };
+
+  const handleGenerateOccasion = (occasion: string) => {
+    toast.success(`AI generating coordinate look for: ${occasion}`);
+    
+    // Find matching items from seeded products list
+    if (occasion === "Wedding") {
+      const top = products.find(p => p.name.includes("Mandarin") || p.name.includes("Oxford") || p.name.includes("Shirt"));
+      const bottom = products.find(p => p.name.includes("Trousers") || p.name.includes("Chinos"));
+      const jacket = products.find(p => p.name.includes("Blazer") || p.name.includes("Trench"));
+      const shoes = products.find(p => p.name.toLowerCase().includes("boot") || p.name.toLowerCase().includes("derby"));
+      if (top) setSelectedTop(top);
+      if (bottom) setSelectedBottom(bottom);
+      if (jacket) setSelectedJacket(jacket);
+      if (shoes) setSelectedShoes(shoes);
+    } else if (occasion === "Office") {
+      const top = products.find(p => p.name.includes("Oxford") || p.name.includes("Shirt"));
+      const bottom = products.find(p => p.name.includes("Trousers"));
+      const jacket = products.find(p => p.name.includes("Blazer"));
+      const shoes = products.find(p => p.name.toLowerCase().includes("boot"));
+      if (top) setSelectedTop(top);
+      if (bottom) setSelectedBottom(bottom);
+      if (jacket) setSelectedJacket(jacket);
+      if (shoes) setSelectedShoes(shoes);
+    } else if (occasion === "Party" || occasion === "Date") {
+      const top = products.find(p => p.name.includes("Silk") || p.name.includes("Tee") || p.name.includes("Shirt"));
+      const bottom = products.find(p => p.name.includes("Jeans") || p.name.includes("Skirt") || p.name.includes("Shorts"));
+      const jacket = products.find(p => p.name.includes("Leather") || p.name.includes("Blazer") || p.name.includes("Jacket"));
+      const shoes = products.find(p => p.name.toLowerCase().includes("sneaker") || p.name.toLowerCase().includes("boot"));
+      if (top) setSelectedTop(top);
+      if (bottom) setSelectedBottom(bottom);
+      if (jacket) setSelectedJacket(jacket);
+      if (shoes) setSelectedShoes(shoes);
+    } else { // Casual / Vacation
+      const top = products.find(p => p.name.includes("Knit") || p.name.includes("Tee"));
+      const bottom = products.find(p => p.name.includes("Shorts") || p.name.includes("Jeans"));
+      const jacket = products.find(p => p.name.includes("Trench") || p.name.includes("Cardigan"));
+      const shoes = products.find(p => p.name.toLowerCase().includes("sneaker"));
+      if (top) setSelectedTop(top);
+      if (bottom) setSelectedBottom(bottom);
+      if (jacket) setSelectedJacket(jacket);
+      if (shoes) setSelectedShoes(shoes);
+    }
   };
 
   // Style score calculator
@@ -353,7 +413,9 @@ export default function VirtualTryOnPage() {
               <img 
                 src={selectedPhoto} 
                 alt="Original" 
-                className="absolute inset-0 w-full h-full object-cover" 
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
+                  backgroundRemoved ? "brightness-[0.3] saturate-[0.1] contrast-[1.4] mix-blend-luminosity" : ""
+                }`} 
               />
               
               {/* Processed/Try-On layer clipped based on slider position */}
@@ -364,7 +426,9 @@ export default function VirtualTryOnPage() {
                 <img 
                   src={selectedPhoto} 
                   alt="Overlay Background" 
-                  className="absolute inset-0 w-full h-full object-cover brightness-[0.9]" 
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
+                    backgroundRemoved ? "brightness-[0.3] saturate-[0.1] contrast-[1.4] mix-blend-luminosity" : "brightness-[0.9]"
+                  }`} 
                 />
                 
                 {/* 1. Mapped selected garments overlay */}
@@ -441,6 +505,108 @@ export default function VirtualTryOnPage() {
               </div>
             </div>
 
+            {/* Simulated Live Camera Scan Overlay */}
+            {cameraActive && (
+              <div className="absolute inset-0 z-30 bg-zinc-950 flex flex-col items-center justify-center">
+                <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-tr from-zinc-950 via-zinc-900 to-zinc-950 opacity-95 relative flex items-center justify-center">
+                    <div className="w-44 h-72 rounded-[3.5rem] border-2 border-dashed border-amber-400/30 animate-pulse relative flex items-center justify-center">
+                      <div className="text-[9px] text-amber-400/50 uppercase tracking-widest font-mono text-center leading-relaxed">
+                        Align body frame<br/>for AI Posture scan
+                      </div>
+                    </div>
+                    <div className="absolute left-0 right-0 h-[2px] bg-[#C9A45D]/80 shadow-lg shadow-[#C9A45D] animate-[bounce_2.5s_infinite] top-1/4" />
+                  </div>
+                </div>
+
+                <div className="absolute top-4 left-4 flex items-center space-x-1.5 bg-red-950/85 border border-red-800/30 text-red-400 text-[8px] tracking-widest font-mono uppercase px-2.5 py-1 rounded-full animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 block" />
+                  <span>Live Scanner</span>
+                </div>
+
+                {cameraScanProgress > 0 && (
+                  <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center p-6 space-y-3 z-40">
+                    <span className="text-[9px] text-[#C9A45D] tracking-[0.2em] uppercase font-bold animate-pulse">Mapping body joints</span>
+                    <div className="w-44 h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                      <div className="h-full bg-[#C9A45D] transition-all duration-100" style={{ width: `${cameraScanProgress}%` }} />
+                    </div>
+                    <span className="text-[8px] text-zinc-500 font-mono">{cameraScanProgress}% COMPLETED</span>
+                  </div>
+                )}
+
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 z-50">
+                  <button 
+                    onClick={() => {
+                      setCameraScanProgress(10);
+                      const interval = setInterval(() => {
+                        setCameraScanProgress(prev => {
+                          if (prev >= 100) {
+                            clearInterval(interval);
+                            setCameraActive(false);
+                            setScanning(false);
+                            setScanned(true);
+                            setSelectedPhoto("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80");
+                            toast.success("AI Pose scan completed. Landmarks estimated!");
+                            return 0;
+                          }
+                          return prev + 15;
+                        });
+                      }, 200);
+                    }}
+                    className="bg-[#C9A45D] hover:bg-[#F5D58A] text-black font-bold text-[9px] tracking-widest uppercase px-5 py-2.5 rounded-full transition-colors cursor-pointer"
+                  >
+                    Take Photo
+                  </button>
+                  <button 
+                    onClick={() => setCameraActive(false)}
+                    className="bg-zinc-900 border border-zinc-800 text-white font-bold text-[9px] tracking-widest uppercase px-5 py-2.5 rounded-full hover:bg-zinc-800 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Interactive 360° Rotator View */}
+            {is360Active && (
+              <div 
+                className="absolute inset-0 z-30 bg-zinc-950 flex flex-col items-center justify-center p-4 cursor-grab active:cursor-grabbing"
+                onMouseDown={(e) => { setIsRotating(true); setStartX(e.clientX); }}
+                onMouseMove={(e) => {
+                  if (!isRotating) return;
+                  const diffX = e.clientX - startX;
+                  setRotationAngle((prev) => (prev + diffX * 0.8) % 360);
+                  setStartX(e.clientX);
+                }}
+                onMouseUp={() => setIsRotating(false)}
+                onMouseLeave={() => setIsRotating(false)}
+              >
+                <span className="absolute top-4 left-4 text-[9px] uppercase tracking-widest text-[#C9A45D] font-bold">Interactive 360° View</span>
+                
+                <div 
+                  className="w-36 aspect-[3/4] transition-all"
+                  style={{ transform: `rotateY(${rotationAngle}deg)`, transformStyle: "preserve-3d" }}
+                >
+                  <img 
+                    src={selectedTop?.images?.[0]?.url || "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=500"} 
+                    alt="360 view garment" 
+                    className="w-full h-full object-cover rounded-2xl shadow-xl border border-zinc-850"
+                  />
+                </div>
+
+                <span className="absolute bottom-4 text-[8px] uppercase tracking-widest text-zinc-500 font-bold text-center">
+                  Drag left/right to spin garment & inspect stitching
+                </span>
+
+                <button 
+                  onClick={() => setIs360Active(false)}
+                  className="absolute top-4 right-4 text-xs font-bold text-zinc-500 hover:text-white uppercase tracking-wider cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
           </div>
 
           {/* Slider input handle */}
@@ -487,47 +653,94 @@ export default function VirtualTryOnPage() {
             </button>
           </div>
 
-          {/* Change models presets */}
-          <div className="w-full max-w-[340px] space-y-2 text-left">
-            <span className="text-[9px] uppercase tracking-widest text-zinc-550 font-bold block">Portrait Settings</span>
-            <div className="flex gap-2">
-              {PRESET_MODELS.map((m) => (
+          {/* Portrait & Rendering Settings */}
+          <div className="w-full max-w-[340px] space-y-4 text-left">
+            <div>
+              <span className="text-[9px] uppercase tracking-widest text-[#C9A45D] font-bold block mb-2">Fitting Controls</span>
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={m.id}
                   onClick={() => {
-                    setSelectedPhoto(m.url);
-                    setLandmarks(m.id === "male" ? {
-                      shoulderLeft: { x: 80, y: 130 },
-                      shoulderRight: { x: 180, y: 130 },
-                      waistLeft: { x: 95, y: 220 },
-                      waistRight: { x: 165, y: 220 },
-                      hipLeft: { x: 90, y: 270 },
-                      hipRight: { x: 170, y: 270 }
-                    } : {
-                      shoulderLeft: { x: 90, y: 140 },
-                      shoulderRight: { x: 170, y: 140 },
-                      waistLeft: { x: 100, y: 220 },
-                      waistRight: { x: 160, y: 220 },
-                      hipLeft: { x: 95, y: 280 },
-                      hipRight: { x: 165, y: 280 }
-                    });
-                    setScanned(true);
+                    setCameraActive(true);
+                    toast.success("Opening AI Live Scanner feed...");
                   }}
-                  className={`flex-grow border text-[10px] font-semibold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
-                    selectedPhoto === m.url 
-                      ? "border-amber-400 bg-amber-400/5 text-amber-400" 
+                  className="flex-grow border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-white text-[10px] font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5 text-amber-400" />
+                  <span>AI Camera Scan</span>
+                </button>
+
+                <button
+                  onClick={() => setIs360Active(true)}
+                  className={`flex-grow border text-[10px] font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer ${
+                    is360Active
+                      ? "border-amber-400 bg-amber-400/5 text-amber-400"
                       : "border-zinc-900 bg-zinc-950 text-zinc-400 hover:text-white"
                   }`}
                 >
-                  {m.label}
+                  <Eye className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Interactive 360°</span>
                 </button>
-              ))}
-              
-              <label className="border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-white text-[10px] font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer">
-                <Upload className="w-3.5 h-3.5" />
-                <span>Upload Selfie</span>
-                <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-              </label>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[9px] uppercase tracking-widest text-zinc-550 font-bold block mb-2">Model Presets</span>
+              <div className="flex gap-2">
+                {PRESET_MODELS.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      setSelectedPhoto(m.url);
+                      setLandmarks(m.id === "male" ? {
+                        shoulderLeft: { x: 80, y: 130 },
+                        shoulderRight: { x: 180, y: 130 },
+                        waistLeft: { x: 95, y: 220 },
+                        waistRight: { x: 165, y: 220 },
+                        hipLeft: { x: 90, y: 270 },
+                        hipRight: { x: 170, y: 270 }
+                      } : {
+                        shoulderLeft: { x: 90, y: 140 },
+                        shoulderRight: { x: 170, y: 140 },
+                        waistLeft: { x: 100, y: 220 },
+                        waistRight: { x: 160, y: 220 },
+                        hipLeft: { x: 95, y: 280 },
+                        hipRight: { x: 165, y: 280 }
+                      });
+                      setScanned(true);
+                    }}
+                    className={`flex-grow border text-[10px] font-semibold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
+                      selectedPhoto === m.url 
+                        ? "border-amber-400 bg-amber-400/5 text-amber-400" 
+                        : "border-zinc-900 bg-zinc-950 text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+                
+                <label className="border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-white text-[10px] font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload</span>
+                  <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between bg-zinc-950 border border-zinc-900 p-2.5 rounded-xl">
+              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Smart Background Removal</span>
+              <button
+                onClick={() => {
+                  setBackgroundRemoved(!backgroundRemoved);
+                  toast.success(backgroundRemoved ? "Original background restored" : "Smart background removal activated!");
+                }}
+                className={`text-[9px] font-mono font-bold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                  backgroundRemoved 
+                    ? "border-[#61D28B] text-[#61D28B] bg-[#61D28B]/5" 
+                    : "border-zinc-800 text-zinc-500 hover:text-white"
+                }`}
+              >
+                {backgroundRemoved ? "ON" : "OFF"}
+              </button>
             </div>
           </div>
 
@@ -614,6 +827,84 @@ export default function VirtualTryOnPage() {
             </div>
           </div>
 
+          {/* Personal AI Closet & Occasion Coordinate Generator */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* personal closet */}
+            <div className="bg-zinc-900/30 border border-zinc-900 rounded-3xl p-5 space-y-3.5">
+              <div className="flex justify-between items-center">
+                <h4 className="font-serif text-xs font-bold text-white uppercase tracking-wider">AI Personal Closet</h4>
+                <span className="text-[8px] uppercase tracking-widest text-[#C9A45D] font-bold">Your Own Clothes</span>
+              </div>
+              <p className="text-[10px] text-zinc-550 font-light leading-relaxed">
+                Upload photos of pieces you already own. AI will suggest combinations with items from Veloura.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <label className="w-14 h-16 rounded-xl border border-dashed border-zinc-800 bg-zinc-950/40 hover:bg-zinc-950 flex flex-col items-center justify-center gap-1 cursor-pointer text-zinc-500 hover:text-white transition-colors">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span className="text-[7px] uppercase tracking-wider font-bold">Add Piece</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setMyClosetUploads((prev) => [reader.result as string, ...prev]);
+                        toast.success("Own item uploaded! AI Stylist is generating matching coordinates.");
+                        setChatLog(prev => [
+                          ...prev,
+                          { role: "user", content: "Analyze my uploaded black leather garment and coordinate a Veloura look." },
+                          { role: "assistant", content: "I have analyzed your uploaded item. Its fabric texture coordinates perfectly with our Cashmere Double-Breasted Trench Coat and Selvedge Denim Jeans. I recommend adding them to your canvas!" }
+                        ]);
+                      };
+                      reader.readAsDataURL(file);
+                    }} 
+                    className="hidden" 
+                  />
+                </label>
+
+                {myClosetUploads.map((img, idx) => (
+                  <div key={idx} className="relative w-14 h-16 rounded-xl overflow-hidden border border-zinc-900 group">
+                    <img src={img} alt="own garment" className="w-full h-full object-cover" />
+                    <button 
+                      onClick={() => setMyClosetUploads(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-400 transition-opacity"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* occasion generator */}
+            <div className="bg-zinc-900/30 border border-zinc-900 rounded-3xl p-5 space-y-3">
+              <h4 className="font-serif text-xs font-bold text-white uppercase tracking-wider">Occasion Outfit Generator</h4>
+              <p className="text-[10px] text-zinc-550 font-light leading-relaxed">
+                Select an event context. The AI will instantly load matching outfits on your fitting portrait.
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {["Wedding", "Office", "Party", "Casual", "Date", "Vacation"].map((occ) => (
+                  <button
+                    key={occ}
+                    onClick={() => {
+                      setActiveOccasion(occ);
+                      handleGenerateOccasion(occ);
+                    }}
+                    className={`text-[9px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
+                      activeOccasion === occ
+                        ? "border-[#C9A45D] text-black bg-gradient-to-r from-[#F6E7B4] via-[#C9A45D] to-[#9E7A39]"
+                        : "border-zinc-850 bg-zinc-950/20 text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    {occ}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* 2. Manual Overlay adjustments panel */}
@@ -688,20 +979,34 @@ export default function VirtualTryOnPage() {
               </div>
             </div>
 
-            {/* 3. AI Sizing Recommendation & Outfit Match Score */}
+            {/* 3. AI Sizing Recommendation & Detailed Outfit Match Score */}
             <div className="space-y-6">
               
-              {/* Outfit Score Card */}
-              <div className="bg-zinc-950 border border-zinc-900 p-5 rounded-3xl flex justify-between items-center">
-                <div className="space-y-1">
-                  <span className="text-[9px] uppercase tracking-widest text-zinc-550 font-bold block">Outfit Match Score</span>
-                  <h4 className="font-serif text-lg font-bold text-white uppercase tracking-wider">AI Curation Score</h4>
-                  <p className="text-[10px] text-zinc-500 font-light max-w-[180px] leading-tight pt-1">
-                    Checking color contrast harmony and formality balance based on wardrobe rules.
-                  </p>
+              {/* Detailed Outfit Score Card */}
+              <div className="bg-zinc-950 border border-zinc-900 p-5 rounded-3xl space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="space-y-1">
+                    <span className="text-[9px] uppercase tracking-widest text-[#C9A45D] font-bold block">Fashion Score Index</span>
+                    <h4 className="font-serif text-lg font-bold text-white uppercase tracking-wider">AI Curation Details</h4>
+                  </div>
+                  <div className="relative flex items-center justify-center w-14 h-14 rounded-full border-2 border-amber-400/30 bg-amber-400/5 flex-shrink-0">
+                    <span className="text-sm font-serif font-bold text-amber-400">{calculateOutfitScore()}</span>
+                  </div>
                 </div>
-                <div className="relative flex items-center justify-center w-16 h-16 rounded-full border-4 border-amber-400/30 bg-amber-400/5 flex-shrink-0">
-                  <span className="text-base font-serif font-bold text-amber-400">{calculateOutfitScore()}</span>
+
+                <div className="border-t border-zinc-900 pt-3 space-y-2 text-[10px] text-zinc-400">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-[#61D28B] font-bold">✔</span>
+                    <span><strong>Proportion Fit:</strong> Pose landmarks detect matching sleeve and shoulder drape contours.</span>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <span className="text-[#61D28B] font-bold">✔</span>
+                    <span><strong>Color Harmony:</strong> Curation matches skin tone contrast scores (Gold-light + Dark Neutral index).</span>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <span className="text-[#61D28B] font-bold">✔</span>
+                    <span><strong>Formality Balance:</strong> Suitability is optimal for smart-casual and formal styling events.</span>
+                  </div>
                 </div>
               </div>
 
@@ -717,7 +1022,7 @@ export default function VirtualTryOnPage() {
                       value={heightInput}
                       onChange={(e) => setHeightInput(e.target.value)}
                       className="w-full bg-zinc-950 border border-zinc-850 rounded-lg py-1.5 px-2.5 text-xs text-white"
-                      placeholder="e.g. 175"
+                      placeholder="e.g. 180"
                       required
                     />
                   </div>
@@ -728,7 +1033,7 @@ export default function VirtualTryOnPage() {
                       value={weightInput}
                       onChange={(e) => setWeightInput(e.target.value)}
                       className="w-full bg-zinc-950 border border-zinc-850 rounded-lg py-1.5 px-2.5 text-xs text-white"
-                      placeholder="e.g. 68"
+                      placeholder="e.g. 72"
                       required
                     />
                   </div>
@@ -748,22 +1053,18 @@ export default function VirtualTryOnPage() {
                     type="submit"
                     className="col-span-2 w-full bg-zinc-950 border border-zinc-850 text-white font-semibold text-xs py-2 rounded-lg hover:bg-zinc-900 transition-colors uppercase tracking-wider cursor-pointer"
                   >
-                    Calculate Sizing Recommendation
+                    Calculate Recommended Size
                   </button>
                 </form>
 
                 {sizingRecommendation && (
                   <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-900 text-xs space-y-1.5 animate-fadeIn">
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Recommended Shirt:</span>
+                      <span className="text-zinc-500">Recommended Size:</span>
                       <strong className="text-white">{sizingRecommendation.shirt}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-500">Recommended Pants:</span>
-                      <strong className="text-white">{sizingRecommendation.pant}</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Fitting Confidence:</span>
+                      <span className="text-zinc-500">Confidence Match:</span>
                       <strong className="text-amber-400">{sizingRecommendation.confidence}</strong>
                     </div>
                   </div>
