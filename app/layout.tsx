@@ -6,6 +6,8 @@ import { CartProvider } from "@/context/CartContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "react-hot-toast";
+import SmoothScroll from "@/components/effects/SmoothScroll";
+import CustomCursor from "@/components/effects/CustomCursor";
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
@@ -29,35 +31,38 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} ${playfair.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 font-sans">
+      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
+        <div className="noise-overlay" />
+        <CustomCursor />
         <AuthProvider>
           <CartProvider>
-            
-            {/* Global toast alerts */}
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                style: {
-                  background: "#18181b",
-                  color: "#fafafa",
-                  border: "1px solid #27272a",
-                  fontSize: "13px",
-                  borderRadius: "9999px",
-                },
-              }}
-            />
+            <SmoothScroll>
+              {/* Global toast alerts */}
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  style: {
+                    background: "#141414",
+                    color: "#F7F6F3",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    fontSize: "13px",
+                    borderRadius: "9999px",
+                  },
+                }}
+              />
 
-            <Navbar />
-            
-            <main className="flex-grow flex flex-col">
-              {children}
-            </main>
-            
-            <Footer />
-
+              <Navbar />
+              
+              <main className="flex-grow flex flex-col">
+                {children}
+              </main>
+              
+              <Footer />
+            </SmoothScroll>
           </CartProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
+
