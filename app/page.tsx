@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles, Shield, PlaneTakeoff, Award, MessageSquare, Send, X, Volume2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 // Luxury fashion background video URLs from public stock feeds
 const BACKGROUND_VIDEOS = [
