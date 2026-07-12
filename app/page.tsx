@@ -209,13 +209,13 @@ export default function HomePage() {
   };
 
   // Split word-by-character helper
-  const splitWords = (text: string) => {
+  const splitWords = (text: string, extraCharClass: string = "") => {
     return text.split(" ").map((word, wordIdx) => (
       <span key={wordIdx} className="inline-block whitespace-nowrap mr-3 overflow-hidden py-1">
         {word.split("").map((char, charIdx) => (
           <span
             key={charIdx}
-            className="char-anim inline-block origin-bottom-left"
+            className={`char-anim inline-block origin-bottom-left ${extraCharClass}`}
           >
             {char}
           </span>
@@ -284,8 +284,8 @@ export default function HomePage() {
             <span className="block">
               {splitWords("Luxury,")}
             </span>
-            <span className="block bg-gradient-to-r from-[#F6E7B4] via-[#D6B36A] to-[#9E7A39] bg-clip-text text-transparent font-normal">
-              {splitWords("Reimagined")}
+            <span className="block font-normal">
+              {splitWords("Reimagined", "bg-gradient-to-r from-[#F6E7B4] via-[#D6B36A] to-[#9E7A39] bg-clip-text text-transparent")}
             </span>
             <span className="block text-white">
               {splitWords("Through AI.")}
