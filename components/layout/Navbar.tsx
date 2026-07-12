@@ -180,12 +180,12 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="text-xs font-semibold uppercase tracking-wider text-black bg-white hover:bg-zinc-200 px-4 py-2 rounded-full transition-colors"
+              <button
+                onClick={() => router.push("/login")}
+                className="text-xs font-semibold uppercase tracking-wider text-black bg-white hover:bg-zinc-200 px-4 py-2 rounded-full transition-colors cursor-pointer"
               >
                 Sign In
-              </Link>
+              </button>
             )}
 
             {/* Mobile Menu Button */}
@@ -253,6 +253,18 @@ export default function Navbar() {
                 <User className="w-4 h-4" />
                 <span>My Orders & Profile</span>
               </Link>
+            )}
+            {!user && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  router.push("/login");
+                }}
+                className="text-sm font-medium text-zinc-300 hover:text-white flex items-center space-x-1 cursor-pointer text-left"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In</span>
+              </button>
             )}
           </nav>
         </div>
