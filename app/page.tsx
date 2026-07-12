@@ -17,9 +17,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Video transitions
-  const [activeVideoIdx, setActiveVideoIdx] = useState(0);
-
   // Floating AI Orb States
   const [isOrbOpen, setIsOrbOpen] = useState(false);
   const [orbQuery, setOrbQuery] = useState("");
@@ -29,7 +26,23 @@ export default function HomePage() {
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
   const [cursorHovering, setCursorHovering] = useState(false);
 
+  // Statistics states
+  const [statsCount1, setStatsCount1] = useState(0);
+  const [statsCount2, setStatsCount2] = useState(0);
+  const [statsCount3, setStatsCount3] = useState(0);
+
+  // GSAP Animation References
+  const heroRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    // Register GSAP ScrollTrigger plugin on client-side
+    gsap.registerPlugin(ScrollTrigger);
+
     // Fetch featured products
     fetch("/api/products?limit=4")
       .then((res) => res.json())
@@ -41,20 +54,133 @@ export default function HomePage() {
       .catch((err) => console.error("Error loading home products", err))
       .finally(() => setLoading(false));
 
-    // Video transition loops (fades between loops)
-    const interval = setInterval(() => {
-      setActiveVideoIdx((prev) => (prev + 1) % BACKGROUND_VIDEOS.length);
-    }, 12000);
-
     // Mouse glow tracker
     const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY });
     };
     window.addEventListener("mousemove", handleMouseMove);
 
+    // 1. Initial Timeline Animations (Duration: 2.5s)
+    const tl = gsap.timeline();
+    
+    // Set initial layout states
+    gsap.set(videoRef.current, { scale: 1.08, opacity: 0 });
+    gsap.set(".char-anim", { y: 80, rotate: 4, opacity: 0 });
+    gsap.set(subtitleRef.current, { filter: "blur(20px)", opacity: 0 });
+    gsap.set(ctaRef.current, { scale: 0.8, opacity: 0 });
+    gsap.set(scrollIndicatorRef.current, { opacity: 0 });
+
+    tl.to(videoRef.current, { opacity: 0.45, duration: 1.2, ease: "power2.out" })
+      .to(videoRef.current, { scale: 1, duration: 3.5, ease: "power4.out" }, 0)
+      .to(".char-anim", {
+        y: 0,
+        rotate: 0,
+        opacity: 1,
+        duration: 1.2,
+        stagger: 0.04,
+        ease: "power4.out"
+      }, 0.5)
+      .to(subtitleRef.current, {
+        filter: "blur(0px)",
+        opacity: 0.8,
+        duration: 1.2,
+        ease: "power2.out"
+      }, 1.2)
+      .to(ctaRef.current, {
+        scale: 1,
+        opacity: 1,
+        duration: 1.2,
+        ease: "elastic.out(1, 0.75)"
+      }, 1.4)
+      .to(scrollIndicatorRef.current, {
+        opacity: 0.6,
+        duration: 0.8
+      }, 1.8);
+
+    // 2. Parallax Scroll Trigger
+    gsap.to(videoRef.current, {
+      scale: 1.15,
+      ease: "none",
+      scrollTrigger: {
+        trigger: heroRef.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: true
+      }
+    });
+
+    gsap.to(".hero-content-anim", {
+      y: -120,
+      opacity: 0,
+      ease: "none",
+      scrollTrigger: {
+        trigger: heroRef.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: true
+      }
+    });
+
+    // 3. Section Reveal Scroll Triggers
+    gsap.utils.toArray("section").forEach((sec: any) => {
+      if (sec === heroRef.current) return;
+      
+      gsap.fromTo(sec, 
+        { opacity: 0, y: 70, filter: "blur(6px)" },
+        { 
+          opacity: 1, 
+          y: 0, 
+          filter: "blur(0px)",
+          duration: 1.2, 
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: sec,
+            start: "top 85%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+    });
+
+    // 4. Statistics Counter Scroll Trigger
+    const statsTrigger = {
+      trigger: "#stats-section",
+      start: "top 80%",
+    };
+
+    gsap.to({ val: 0 }, {
+      val: 100000,
+      duration: 3,
+      ease: "power3.out",
+      scrollTrigger: statsTrigger,
+      onUpdate: function() {
+        setStatsCount1(Math.floor(this.targets()[0].val));
+      }
+    });
+
+    gsap.to({ val: 0 }, {
+      val: 25,
+      duration: 3,
+      ease: "power3.out",
+      scrollTrigger: statsTrigger,
+      onUpdate: function() {
+        setStatsCount2(Math.floor(this.targets()[0].val));
+      }
+    });
+
+    gsap.to({ val: 0 }, {
+      val: 98,
+      duration: 3,
+      ease: "power3.out",
+      scrollTrigger: statsTrigger,
+      onUpdate: function() {
+        setStatsCount3(Math.floor(this.targets()[0].val));
+      }
+    });
+
     return () => {
-      clearInterval(interval);
       window.removeEventListener("mousemove", handleMouseMove);
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, []);
 
@@ -80,76 +206,100 @@ export default function HomePage() {
     }, 1200);
   };
 
+  // Split word-by-character helper
+  const splitWords = (text: string) => {
+    return text.split(" ").map((word, wordIdx) => (
+      <span key={wordIdx} className="inline-block whitespace-nowrap mr-3 overflow-hidden py-1">
+        {word.split("").map((char, charIdx) => (
+          <span
+            key={charIdx}
+            className="char-anim inline-block origin-bottom-left"
+          >
+            {char}
+          </span>
+        ))}
+      </span>
+    ));
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#060606] text-[#F7F5F2] font-sans selection:bg-[#D6B36A]/30 selection:text-[#F6E7B4] relative overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-background text-foreground font-sans selection:bg-accent/30 selection:text-[#F6E7B4] relative overflow-hidden">
       
-      {/* Dynamic Magnetic Glow Cursor Trail (Hidden on touch screens) */}
-      <div 
-        className="hidden md:block fixed pointer-events-none z-50 mix-blend-screen transition-transform duration-100 ease-out -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-        style={{
-          left: `${mousePos.x}px`,
-          top: `${mousePos.y}px`,
-          width: cursorHovering ? "120px" : "80px",
-          height: cursorHovering ? "120px" : "80px",
-          background: "radial-gradient(circle, rgba(214,179,106,0.15) 0%, transparent 70%)"
-        }}
-      />
-
-      {/* Grainy Noise Overlay Texture for Film-like aesthetic */}
-      <div className="pointer-events-none fixed inset-0 z-40 opacity-[0.02] mix-blend-soft-light bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
-
       {/* 1. Fullscreen Cinematic Hero Section */}
       <section 
-        className="relative h-screen flex items-center justify-center overflow-hidden border-b border-zinc-950"
+        ref={heroRef}
+        className="relative h-screen flex items-center justify-center overflow-hidden border-b border-zinc-950 z-10"
         onMouseEnter={() => setCursorHovering(true)}
         onMouseLeave={() => setCursorHovering(false)}
       >
         
-        {/* Background Cinematic Video Loop with slow zoom-in transition */}
-        <div className="absolute inset-0 w-full h-full scale-[1.08] animate-[slowZoom_30s_infinite_alternate]">
+        {/* Background Cinematic Video Loop */}
+        <div className="absolute inset-0 w-full h-full">
           <video
-            src={BACKGROUND_VIDEOS[activeVideoIdx]}
+            ref={videoRef}
+            src="/videos/hero.mp4"
             autoPlay
             muted
             loop
             playsInline
-            className="w-full h-full object-cover transition-opacity duration-1500 opacity-[0.4]"
+            className="w-full h-full object-cover"
           />
         </div>
 
         {/* Premium Dark Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#060606]/85 to-[#060606]" />
+        <div 
+          className="absolute inset-0 z-10"
+          style={{
+            background: "linear-gradient(180deg, rgba(0,0,0,0.60), rgba(0,0,0,0.20), rgba(0,0,0,0.70))"
+          }}
+        />
+
+        {/* Second soft light radial gradient overlay */}
+        <div 
+          className="absolute inset-0 z-10"
+          style={{
+            background: "radial-gradient(circle at top, rgba(255,255,255,0.05), transparent 60%)"
+          }}
+        />
+
+        {/* Vignette border framing */}
+        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_300px_rgba(0,0,0,0.55)] z-10" />
 
         {/* Subtle Gold Light Beam */}
-        <div className="absolute top-[-20%] left-[30%] w-[600px] h-[600px] rounded-full bg-[#D6B36A]/5 blur-[160px] pointer-events-none" />
+        <div className="absolute top-[-20%] left-[30%] w-[600px] h-[600px] rounded-full bg-accent/5 blur-[160px] pointer-events-none z-10" />
 
         {/* Hero Content */}
-        <div className="relative max-w-5xl mx-auto px-6 text-center z-10 space-y-8">
+        <div className="hero-content-anim relative max-w-5xl mx-auto px-6 text-center z-20 space-y-8">
           
           {/* Tagline */}
-          <div className="inline-flex items-center space-x-2 bg-white/5 border border-white/10 backdrop-blur-xl rounded-full px-5 py-2 text-[9px] uppercase tracking-[0.25em] text-[#D6B36A] font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-[#D6B36A] animate-pulse" />
-            <span>Luxury Fashion. Powered by AI.</span>
+          <div className="inline-flex items-center space-x-2 bg-white/5 border border-white/10 backdrop-blur-xl rounded-full px-5 py-2 text-[9px] uppercase tracking-[0.25em] text-[#C9A45D] font-bold">
+            <Sparkles className="w-3.5 h-3.5 text-[#C9A45D] animate-pulse" />
+            <span>Luxury Reimagined. Powered by AI.</span>
           </div>
 
-          {/* Title letter-by-word reveal details */}
+          {/* Headline Split-Text reveal */}
           <h1 className="font-serif text-5xl md:text-8xl font-light tracking-tight text-white leading-[1.05] uppercase">
-            <span className="block overflow-hidden">
-              <span className="inline-block animate-[fadeInUp_1s_ease-out_0.2s_both]">Timeless Design.</span>
+            <span className="block">
+              {splitWords("Luxury,")}
             </span>
-            <span className="block overflow-hidden">
-              <span className="inline-block bg-gradient-to-r from-[#F6E7B4] via-[#D6B36A] to-[#9E7A39] bg-clip-text text-transparent font-normal animate-[fadeInUp_1s_ease-out_0.5s_both]">
-                Modern Silhouettes.
-              </span>
+            <span className="block bg-gradient-to-r from-[#F6E7B4] via-[#D6B36A] to-[#9E7A39] bg-clip-text text-transparent font-normal">
+              {splitWords("Reimagined")}
+            </span>
+            <span className="block text-white">
+              {splitWords("Through AI.")}
             </span>
           </h1>
 
-          <p className="text-zinc-400 text-xs md:text-sm max-w-lg mx-auto font-light leading-relaxed tracking-wider animate-[fadeIn_1.5s_ease-out_0.8s_both] opacity-80">
-            Crafted from raw Japanese selvedge denim, pure Mongolian cashmere, and Italian double-faced wool. Curated collections built to endure.
+          {/* Subheading */}
+          <p 
+            ref={subtitleRef}
+            className="text-zinc-400 text-xs md:text-sm max-w-lg mx-auto font-light leading-relaxed tracking-wider opacity-80"
+          >
+            Experience intelligent fashion, personalized styling, and immersive shopping. Crafted from raw Japanese selvedge denim and pure Mongolian cashmere.
           </p>
 
           {/* Action CTAs */}
-          <div className="pt-4 flex flex-wrap justify-center gap-4 animate-[fadeIn_1.5s_ease-out_1s_both]">
+          <div ref={ctaRef} className="pt-4 flex flex-wrap justify-center gap-4">
             <Link
               href="/tryon"
               className="inline-flex items-center space-x-2.5 text-black bg-gradient-to-r from-[#F6E7B4] via-[#D6B36A] to-[#9E7A39] hover:brightness-110 font-bold uppercase tracking-widest text-[10px] px-8 py-4.5 rounded-full transition-all duration-300 hover:-translate-y-0.5 shadow-lg shadow-[#D6B36A]/10 cursor-pointer"
@@ -167,8 +317,8 @@ export default function HomePage() {
 
         </div>
 
-        {/* Bottom Scroll indicator indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 text-zinc-550 text-[9px] uppercase tracking-[0.2em] font-medium opacity-60">
+        {/* Bottom Scroll indicator */}
+        <div ref={scrollIndicatorRef} className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 text-zinc-550 text-[9px] uppercase tracking-[0.2em] font-medium z-20">
           <span>Scroll to Discover</span>
           <div className="w-[1px] h-8 bg-gradient-to-b from-zinc-600 to-transparent animate-[scrollLine_2s_infinite]" />
         </div>
@@ -333,6 +483,36 @@ export default function HomePage() {
             </div>
           )}
 
+        </div>
+      </section>
+
+      {/* Premium Statistics Counter Section */}
+      <section id="stats-section" className="bg-[#0D0D0D] border-y border-zinc-950/65 py-24 w-full text-center">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="space-y-2">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#C9A45D] font-bold block">Intelligent Curation</span>
+            <div className="font-mono text-5xl md:text-7xl font-light text-white tracking-tight">
+              <span>{statsCount1.toLocaleString()}</span>
+              <span className="text-[#C9A45D] font-normal">+</span>
+            </div>
+            <p className="text-zinc-500 text-xs font-light">Garments Fitted via Virtual Try-On</p>
+          </div>
+          <div className="space-y-2">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#C9A45D] font-bold block">Personalized Styles</span>
+            <div className="font-mono text-5xl md:text-7xl font-light text-white tracking-tight">
+              <span>{statsCount2}</span>
+              <span className="text-[#C9A45D] font-normal">K+</span>
+            </div>
+            <p className="text-zinc-550 text-xs font-light">Active Shoppers Assisted by AI</p>
+          </div>
+          <div className="space-y-2">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#C9A45D] font-bold block">Carbon Footprint</span>
+            <div className="font-mono text-5xl md:text-7xl font-light text-white tracking-tight">
+              <span>{statsCount3}</span>
+              <span className="text-[#C9A45D] font-normal">%</span>
+            </div>
+            <p className="text-zinc-550 text-xs font-light">Eco-Fiber Sustainability Rating</p>
+          </div>
         </div>
       </section>
 
