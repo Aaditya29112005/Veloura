@@ -15,7 +15,9 @@ export async function GET() {
     const payload = verifyToken(token);
 
     if (!payload) {
-      return NextResponse.json({ user: null }, { status: 200 });
+      const response = NextResponse.json({ user: null }, { status: 200 });
+      response.cookies.delete("token");
+      return response;
     }
 
     const user = await db.user.findUnique({
@@ -33,7 +35,9 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ user: null }, { status: 200 });
+      const response = NextResponse.json({ user: null }, { status: 200 });
+      response.cookies.delete("token");
+      return response;
     }
 
     return NextResponse.json({ user });

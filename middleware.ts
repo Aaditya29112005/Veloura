@@ -37,11 +37,6 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = pathname.startsWith("/checkout") || pathname.startsWith("/orders");
   const isAdminRoute = pathname.startsWith("/admin");
 
-  // If logged in and trying to access login/signup, redirect to home
-  if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
   // If trying to access checkout/orders and not logged in, redirect to login
   if (isProtectedRoute && !user) {
     const loginUrl = new URL("/login", request.url);
