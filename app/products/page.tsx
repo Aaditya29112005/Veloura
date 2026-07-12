@@ -47,8 +47,24 @@ function ProductsContent() {
   // Sync state with URL changes
   useEffect(() => {
     setSearchInput(searchParam);
+    
+    // Sync price, sizes, and colors from URL search parameters
+    setMinPrice(searchParams.get("minPrice") || "0");
+    setMaxPrice(searchParams.get("maxPrice") || "500");
+    setSelectedSizes(searchParams.getAll("size"));
+    setSelectedColors(searchParams.getAll("color"));
+    
     fetchProducts();
-  }, [categoryParam, searchParam, sortParam, pageParam]);
+  }, [
+    categoryParam, 
+    searchParam, 
+    sortParam, 
+    pageParam,
+    searchParams.get("minPrice"),
+    searchParams.get("maxPrice"),
+    searchParams.getAll("size").join(","),
+    searchParams.getAll("color").join(",")
+  ]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -60,12 +76,16 @@ function ProductsContent() {
       if (pageParam) query.set("page", pageParam.toString());
       query.set("limit", "9");
 
-      // Append price and arrays
-      if (minPrice && minPrice !== "0") query.set("minPrice", minPrice);
-      if (maxPrice && maxPrice !== "500") query.set("maxPrice", maxPrice);
-      
-      selectedSizes.forEach((s) => query.append("size", s));
-      selectedColors.forEach((c) => query.append("color", c));
+      // Extract values from the URL query params to send exact request state
+      const currentMinPrice = searchParams.get("minPrice") || "0";
+      const currentMaxPrice = searchParams.get("maxPrice") || "500";
+      const currentSizes = searchParams.getAll("size");
+      const currentColors = searchParams.getAll("color");
+
+      if (currentMinPrice && currentMinPrice !== "0") query.set("minPrice", currentMinPrice);
+      if (currentMaxPrice && currentMaxPrice !== "500") query.set("maxPrice", currentMaxPrice);
+      currentSizes.forEach((s) => query.append("size", s));
+      currentColors.forEach((c) => query.append("color", c));
 
       const res = await fetch(`/api/products?${query.toString()}`);
       if (res.ok) {
@@ -84,11 +104,25 @@ function ProductsContent() {
   const applyFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", "1"); // reset to page 1
+    
     if (searchInput) {
       params.set("search", searchInput);
     } else {
       params.delete("search");
     }
+
+    if (minPrice && minPrice !== "0") {
+      params.set("minPrice", minPrice);
+    } else {
+      params.delete("minPrice");
+    }
+
+    if (maxPrice && maxPrice !== "500") {
+      params.set("maxPrice", maxPrice);
+    } else {
+      params.delete("maxPrice");
+    }
+
     router.push(`/products?${params.toString()}`);
     setShowMobileFilters(false);
   };
@@ -119,15 +153,33 @@ function ProductsContent() {
   };
 
   const toggleSize = (size: string) => {
-    setSelectedSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-    );
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1");
+    
+    const currentSizes = params.getAll("size");
+    params.delete("size");
+    
+    const nextSizes = currentSizes.includes(size)
+      ? currentSizes.filter((s) => s !== size)
+      : [...currentSizes, size];
+      
+    nextSizes.forEach((s) => params.append("size", s));
+    router.push(`/products?${params.toString()}`);
   };
 
   const toggleColor = (color: string) => {
-    setSelectedColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
-    );
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1");
+    
+    const currentColors = params.getAll("color");
+    params.delete("color");
+    
+    const nextColors = currentColors.includes(color)
+      ? currentColors.filter((c) => c !== color)
+      : [...currentColors, color];
+      
+    nextColors.forEach((c) => params.append("color", c));
+    router.push(`/products?${params.toString()}`);
   };
 
   const clearFilters = () => {

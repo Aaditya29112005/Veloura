@@ -42,15 +42,15 @@ export default function OutfitBuilderPage() {
     if (categorySlug === "outerwear") {
       setSlots((prev) => ({ ...prev, outerwear: product }));
       toast.success(`Outerwear set: ${product.name}`);
-    } else if (categorySlug === "tops") {
+    } else if (categorySlug === "tops-shirts") {
       setSlots((prev) => ({ ...prev, top: product }));
       toast.success(`Top set: ${product.name}`);
     } else if (categorySlug === "bottoms") {
       setSlots((prev) => ({ ...prev, bottom: product }));
       toast.success(`Bottom set: ${product.name}`);
-    } else {
+    } else if (categorySlug === "knitwear") {
       setSlots((prev) => ({ ...prev, accessory: product }));
-      toast.success(`Accessory set: ${product.name}`);
+      toast.success(`Knitwear set: ${product.name}`);
     }
   };
 
@@ -92,10 +92,11 @@ export default function OutfitBuilderPage() {
 
   const filteredProducts = products.filter((p) => {
     const cat = p.category?.slug || "";
-    if (activeCategory === "tops") return cat === "tops";
+    if (activeCategory === "tops") return cat === "tops-shirts";
     if (activeCategory === "bottoms") return cat === "bottoms";
     if (activeCategory === "outerwear") return cat === "outerwear";
-    return cat !== "tops" && cat !== "bottoms" && cat !== "outerwear";
+    if (activeCategory === "knitwear") return cat === "knitwear";
+    return false;
   });
 
   return (
@@ -118,7 +119,7 @@ export default function OutfitBuilderPage() {
         {/* Left Column: Catalog Tabs (4/12 width) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="flex border-b border-zinc-900 text-xs tracking-wider uppercase font-semibold">
-            {["tops", "bottoms", "outerwear", "accessories"].map((tab) => (
+            {["tops", "knitwear", "bottoms", "outerwear"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveCategory(tab)}
@@ -200,12 +201,12 @@ export default function OutfitBuilderPage() {
                 )}
               </div>
 
-              {/* Accessory slot */}
+              {/* Knitwear slot */}
               <div className="flex flex-col items-center">
-                <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold mb-1.5">Accessory</span>
+                <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold mb-1.5">Knitwear</span>
                 {slots.accessory ? (
                   <div className="relative w-20 aspect-[3/4] rounded-xl border border-amber-400/30 overflow-hidden bg-zinc-900">
-                    <img src={slots.accessory.images?.[0]?.url} alt="accessory" className="w-full h-full object-cover" />
+                    <img src={slots.accessory.images?.[0]?.url} alt="knitwear" className="w-full h-full object-cover" />
                     <button onClick={() => clearSlot("accessory")} className="absolute top-1 right-1 p-0.5 bg-black/75 hover:bg-black rounded-full text-white cursor-pointer"><X className="w-3 h-3" /></button>
                   </div>
                 ) : (
