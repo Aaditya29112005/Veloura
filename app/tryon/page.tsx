@@ -37,6 +37,9 @@ export default function VirtualTryOnPage() {
   // Active occasion generator tag
   const [activeOccasion, setActiveOccasion] = useState<string>("");
 
+  // AI Wardrobe lookbook tab selection
+  const [activeWardrobeTab, setActiveWardrobeTab] = useState<string>("Summer");
+
   // Computer Vision Landmarks (Shoulder left/right, Waist left/right, Hips left/right)
   const [landmarks, setLandmarks] = useState<any>({
     shoulderLeft: { x: 90, y: 140 },
@@ -249,6 +252,23 @@ export default function VirtualTryOnPage() {
     setChatPrompt("");
     setChatLoading(true);
 
+    // Intercept local coordinates updates for instant feedback
+    const lowerMsg = userMsg.toLowerCase();
+    if (lowerMsg.includes("beige") || lowerMsg.includes("tan") || lowerMsg.includes("camel")) {
+      const beigeJacket = products.find(p => p.name.toLowerCase().includes("trench") || p.name.toLowerCase().includes("coat") || p.name.toLowerCase().includes("jacket"));
+      if (beigeJacket) {
+        setSelectedJacket(beigeJacket);
+        toast.success("Loaded Cashmere Trench Coat in beige tone!");
+      }
+    }
+    if (lowerMsg.includes("interview") || lowerMsg.includes("office") || lowerMsg.includes("wedding") || lowerMsg.includes("party")) {
+      let occName = "Office";
+      if (lowerMsg.includes("wedding")) occName = "Wedding";
+      if (lowerMsg.includes("party")) occName = "Party";
+      handleGenerateOccasion(occName);
+      toast.success(`AI Stylist loaded outfit coordinates suited for a ${occName}!`);
+    }
+
     try {
       const res = await fetch("/api/ai/stylist", {
         method: "POST",
@@ -279,13 +299,14 @@ export default function VirtualTryOnPage() {
       bottom: selectedBottom,
       jacket: selectedJacket,
       shoes: selectedShoes,
-      score: calculateOutfitScore()
+      score: calculateOutfitScore(),
+      wardrobe: activeWardrobeTab
     };
 
     const updated = [newLook, ...savedLooks];
     setSavedLooks(updated);
     localStorage.setItem("veloura_saved_looks", JSON.stringify(updated));
-    toast.success("Look saved successfully to your virtual profile!");
+    toast.success(`Look saved successfully to your ${activeWardrobeTab} Wardrobe collection!`);
   };
 
   // Delete look
@@ -510,27 +531,45 @@ export default function VirtualTryOnPage() {
               <div className="absolute inset-0 z-30 bg-zinc-950 flex flex-col items-center justify-center">
                 <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center overflow-hidden">
                   <div className="w-full h-full bg-gradient-to-tr from-zinc-950 via-zinc-900 to-zinc-950 opacity-95 relative flex items-center justify-center">
-                    <div className="w-44 h-72 rounded-[3.5rem] border-2 border-dashed border-amber-400/30 animate-pulse relative flex items-center justify-center">
-                      <div className="text-[9px] text-amber-400/50 uppercase tracking-widest font-mono text-center leading-relaxed">
-                        Align body frame<br/>for AI Posture scan
+                    {/* Snapchat/Lenskart style green body tracking outline */}
+                    <div className="w-48 h-80 rounded-[4rem] border-2 border-emerald-500/60 animate-pulse relative flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                      <div className="text-[9px] text-emerald-400/80 uppercase tracking-widest font-mono text-center leading-relaxed">
+                        AI Mirror Align<br/>
+                        <span className="text-[7px] text-zinc-550">Body tracking active</span>
                       </div>
+                      
+                      {/* Simulated skeleton green nodes */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                        <circle cx="96" cy="60" r="4" fill="#10b981" />
+                        <line x1="96" y1="64" x2="96" y2="150" stroke="#10b981" strokeWidth="1.5" />
+                        <line x1="50" y1="90" x2="142" y2="90" stroke="#10b981" strokeWidth="1.5" />
+                        <line x1="70" y1="180" x2="122" y2="180" stroke="#10b981" strokeWidth="1.5" />
+                      </svg>
                     </div>
-                    <div className="absolute left-0 right-0 h-[2px] bg-[#C9A45D]/80 shadow-lg shadow-[#C9A45D] animate-[bounce_2.5s_infinite] top-1/4" />
+                    <div className="absolute left-0 right-0 h-[2px] bg-emerald-500/70 shadow-lg shadow-emerald-500/30 animate-[bounce_3s_infinite] top-1/3" />
                   </div>
                 </div>
 
-                <div className="absolute top-4 left-4 flex items-center space-x-1.5 bg-red-950/85 border border-red-800/30 text-red-400 text-[8px] tracking-widest font-mono uppercase px-2.5 py-1 rounded-full animate-pulse">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 block" />
-                  <span>Live Scanner</span>
+                <div className="absolute top-4 left-4 flex items-center space-x-1.5 bg-emerald-950/85 border border-emerald-800/30 text-emerald-400 text-[8px] tracking-widest font-mono uppercase px-2.5 py-1 rounded-full animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 block" />
+                  <span>Veloura AI Mirror</span>
                 </div>
 
                 {cameraScanProgress > 0 && (
-                  <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center p-6 space-y-3 z-40">
-                    <span className="text-[9px] text-[#C9A45D] tracking-[0.2em] uppercase font-bold animate-pulse">Mapping body joints</span>
+                  <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-6 space-y-3 z-40">
+                    <span className="text-[9px] text-[#C9A45D] tracking-[0.2em] uppercase font-bold animate-pulse">
+                      {cameraScanProgress <= 25 
+                        ? "Analyzing Pose..." 
+                        : cameraScanProgress <= 50 
+                        ? "Detecting Body..." 
+                        : cameraScanProgress <= 75 
+                        ? "Generating Try-On..." 
+                        : "Almost Ready..."}
+                    </span>
                     <div className="w-44 h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
                       <div className="h-full bg-[#C9A45D] transition-all duration-100" style={{ width: `${cameraScanProgress}%` }} />
                     </div>
-                    <span className="text-[8px] text-zinc-500 font-mono">{cameraScanProgress}% COMPLETED</span>
+                    <span className="text-[8px] text-zinc-500 font-mono">{cameraScanProgress}% PROCESS INDEX</span>
                   </div>
                 )}
 
@@ -546,16 +585,16 @@ export default function VirtualTryOnPage() {
                             setScanning(false);
                             setScanned(true);
                             setSelectedPhoto("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80");
-                            toast.success("AI Pose scan completed. Landmarks estimated!");
+                            toast.success("AI Mirror scan capture complete!");
                             return 0;
                           }
                           return prev + 15;
                         });
-                      }, 200);
+                      }, 250);
                     }}
-                    className="bg-[#C9A45D] hover:bg-[#F5D58A] text-black font-bold text-[9px] tracking-widest uppercase px-5 py-2.5 rounded-full transition-colors cursor-pointer"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-[9px] tracking-widest uppercase px-5 py-2.5 rounded-full transition-colors cursor-pointer shadow-lg shadow-emerald-500/20"
                   >
-                    Take Photo
+                    [ Capture ]
                   </button>
                   <button 
                     onClick={() => setCameraActive(false)}
@@ -905,6 +944,53 @@ export default function VirtualTryOnPage() {
             </div>
           </div>
 
+          {/* Complete Your Look (Smart Recommendations) */}
+          <div className="bg-zinc-900/30 border border-zinc-900 rounded-3xl p-5 space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-900/60 pb-3">
+              <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider">Complete The Look</h4>
+              <span className="text-[8px] uppercase tracking-widest text-[#C9A45D] font-bold">Personalized Coordinates</span>
+            </div>
+            
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+              {[
+                { name: "Derby Shoes", slot: "shoes", price: 340, img: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=200" },
+                { name: "Travel Duffle", slot: "bag", price: 620, img: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200" },
+                { name: "Chrono Gold", slot: "watch", price: 890, img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200" },
+                { name: "Suede Belt", slot: "belt", price: 120, img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200" },
+                { name: "Aviators", slot: "sunglasses", price: 210, img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=200" },
+                { name: "Tailored Trousers", slot: "trousers", price: 280, img: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=200" }
+              ].map((rec, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    toast.success(`Coordinated ${rec.name} added to Outfit Curation`);
+                    if (rec.slot === "shoes" || rec.slot === "trousers") {
+                      const matchedItem = products.find(p => p.name.toLowerCase().includes(rec.slot === "shoes" ? "shoe" : "pant") || p.name.toLowerCase().includes(rec.slot === "shoes" ? "boot" : "trouser"));
+                      if (matchedItem) {
+                        if (rec.slot === "shoes") setSelectedShoes(matchedItem);
+                        else setSelectedBottom(matchedItem);
+                      }
+                    } else {
+                      // Add accessory as mock top item
+                      const mockAccessory = { id: `mock-${rec.slot}`, name: rec.name, price: rec.price, images: [{ url: rec.img }] };
+                      setSelectedTop(mockAccessory);
+                    }
+                  }}
+                  className="p-1.5 border border-zinc-900 bg-zinc-950/40 hover:border-zinc-800 rounded-xl text-left cursor-pointer transition-all space-y-1.5 group"
+                >
+                  <div className="aspect-square bg-zinc-900 rounded-lg overflow-hidden relative">
+                    <img src={rec.img} alt={rec.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[7px] uppercase tracking-wider text-zinc-500 font-bold block">{rec.slot}</span>
+                    <span className="text-[9px] font-bold text-zinc-300 block truncate group-hover:text-amber-400">{rec.name}</span>
+                    <span className="text-[9px] text-[#C9A45D] font-mono block">${rec.price}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* 2. Manual Overlay adjustments panel */}
@@ -1007,6 +1093,37 @@ export default function VirtualTryOnPage() {
                     <span className="text-[#61D28B] font-bold">✔</span>
                     <span><strong>Formality Balance:</strong> Suitability is optimal for smart-casual and formal styling events.</span>
                   </div>
+                </div>
+              </div>
+
+              {/* AI Body Analysis Panel */}
+              <div className="bg-zinc-950 border border-zinc-900 p-5 rounded-3xl space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] uppercase tracking-widest text-[#C9A45D] font-bold block">Body Analysis</span>
+                  <span className="text-[8px] font-mono text-zinc-550">MediaPipe Pose Live</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
+                    <span className="text-zinc-550 block text-[9px] uppercase font-bold">Body Type</span>
+                    <span className="text-white font-serif font-bold text-sm">Athletic</span>
+                  </div>
+                  <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
+                    <span className="text-zinc-550 block text-[9px] uppercase font-bold">Height</span>
+                    <span className="text-white font-serif font-bold text-sm">178 cm</span>
+                  </div>
+                  <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
+                    <span className="text-zinc-550 block text-[9px] uppercase font-bold">Recommended Size</span>
+                    <span className="text-[#C9A45D] font-serif font-bold text-sm">M (98% match)</span>
+                  </div>
+                  <div className="bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-900">
+                    <span className="text-zinc-550 block text-[9px] uppercase font-bold">Color Match</span>
+                    <span className="text-amber-400 font-bold text-sm">★★★★★</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-zinc-500 font-light flex justify-between">
+                  <span>Selected Occasion context:</span>
+                  <span className="text-white font-semibold">Business Casual</span>
                 </div>
               </div>
 
@@ -1119,49 +1236,72 @@ export default function VirtualTryOnPage() {
             </form>
           </div>
 
-          {/* 5. Saved Looks Collection */}
+          {/* 5. Saved Looks Collection (AI Wardrobe Closets) */}
           {savedLooks.length > 0 && (
             <div className="bg-zinc-900/30 border border-zinc-900 rounded-3xl p-5 space-y-3.5">
-              <h4 className="font-serif text-xs font-bold text-white uppercase tracking-wider">Saved Looks Closet ({savedLooks.length})</h4>
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-zinc-900 pb-3">
+                <h4 className="font-serif text-xs font-bold text-white uppercase tracking-wider">AI Personal Wardrobe ({savedLooks.length})</h4>
+                <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  {["Summer", "Office", "Wedding", "Casual", "Travel"].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveWardrobeTab(tab)}
+                      className={`text-[8px] uppercase tracking-wider font-bold px-2 py-1 rounded transition-colors cursor-pointer ${
+                        activeWardrobeTab === tab
+                          ? "bg-amber-400/10 text-amber-400 border border-amber-400/20"
+                          : "text-zinc-550 hover:text-zinc-300"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
               
               <div className="flex gap-3 overflow-x-auto pb-2">
-                {savedLooks.map((look) => {
-                  const topUrl = look.top?.images?.[0]?.url;
-                  const bottomUrl = look.bottom?.images?.[0]?.url;
-                  return (
-                    <div 
-                      key={look.id}
-                      className="border border-zinc-900 bg-zinc-950 p-2.5 rounded-xl flex-shrink-0 w-36 space-y-2 relative group hover:border-amber-400/40"
-                    >
-                      <button
-                        onClick={() => deleteLook(look.id)}
-                        className="absolute top-1.5 right-1.5 p-1 bg-zinc-900 border border-zinc-850 hover:text-red-400 text-zinc-500 rounded-md transition-colors z-10 opacity-0 group-hover:opacity-100"
-                        title="Delete look"
+                {savedLooks.filter(look => look.wardrobe === activeWardrobeTab).length === 0 ? (
+                  <div className="py-6 text-center text-[10px] text-zinc-550 font-light w-full">
+                    No curated looks saved under the {activeWardrobeTab} collection yet.
+                  </div>
+                ) : (
+                  savedLooks.filter(look => look.wardrobe === activeWardrobeTab).map((look) => {
+                    const topUrl = look.top?.images?.[0]?.url;
+                    const bottomUrl = look.bottom?.images?.[0]?.url;
+                    return (
+                      <div 
+                        key={look.id}
+                        className="border border-zinc-900 bg-zinc-950 p-2.5 rounded-xl flex-shrink-0 w-36 space-y-2 relative group hover:border-amber-400/40"
                       >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-
-                      <div className="flex gap-1">
-                        <div className="flex-grow aspect-[3/4] bg-zinc-900 rounded overflow-hidden">
-                          {topUrl && <img src={topUrl} alt="top" className="object-cover w-full h-full" />}
-                        </div>
-                        <div className="flex-grow aspect-[3/4] bg-zinc-900 rounded overflow-hidden">
-                          {bottomUrl && <img src={bottomUrl} alt="bottom" className="object-cover w-full h-full" />}
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center pt-1">
-                        <span className="text-[9px] text-amber-400 font-bold font-serif">Score: {look.score}</span>
                         <button
-                          onClick={() => loadSavedLook(look)}
-                          className="bg-white text-black hover:bg-zinc-200 text-[8px] font-bold uppercase tracking-wider py-1 px-2.5 rounded transition-colors cursor-pointer"
+                          onClick={() => deleteLook(look.id)}
+                          className="absolute top-1.5 right-1.5 p-1 bg-zinc-900 border border-zinc-850 hover:text-red-400 text-zinc-500 rounded-md transition-colors z-10 opacity-0 group-hover:opacity-100"
+                          title="Delete look"
                         >
-                          Load
+                          <Trash2 className="w-3 h-3" />
                         </button>
+
+                        <div className="flex gap-1">
+                          <div className="flex-grow aspect-[3/4] bg-zinc-900 rounded overflow-hidden">
+                            {topUrl && <img src={topUrl} alt="top" className="object-cover w-full h-full" />}
+                          </div>
+                          <div className="flex-grow aspect-[3/4] bg-zinc-900 rounded overflow-hidden">
+                            {bottomUrl && <img src={bottomUrl} alt="bottom" className="object-cover w-full h-full" />}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-1">
+                          <span className="text-[9px] text-amber-400 font-bold font-serif">Score: {look.score}</span>
+                          <button
+                            onClick={() => loadSavedLook(look)}
+                            className="bg-white text-black hover:bg-zinc-200 text-[8px] font-bold uppercase tracking-wider py-1 px-2.5 rounded transition-colors cursor-pointer"
+                          >
+                            Load
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
