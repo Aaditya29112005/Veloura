@@ -37,9 +37,20 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     // Force ScrollTrigger to recalculate offsets
     ScrollTrigger.refresh();
 
+    // Use ResizeObserver to watch body heights and update scroll limits dynamically
+    const resizeObserver = new ResizeObserver(() => {
+      lenis.resize();
+      ScrollTrigger.refresh();
+    });
+
+    if (document.body) {
+      resizeObserver.observe(document.body);
+    }
+
     return () => {
       lenis.destroy();
       gsap.ticker.remove(updateTicker);
+      resizeObserver.disconnect();
     };
   }, [pathname]);
 
